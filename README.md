@@ -7,7 +7,7 @@ This is yet another rule-based morphological analysis tool. No built-in rules ar
 * Apart from POS-tagging and full morphological tagging, there is a glossing option (words can be split into morphemes).
 * Lexemes can carry any number of attributes that have to end up in the annotation, e.g. translations into the metalanguage.
 * Ambiguity is allowed: all words you analyze will receive all theoretically possible analyses regardless of the context. (You can then use e.g. [CG](https://visl.sdu.dk/constraint_grammar.html) for rule-based disambiguation.)
-* While, in computational terms, the language described by Uniparser-morph rules is certainly regular, the description is actually NOT entirely converted into an FST. Therefore, it's not nearly as fast as FST-based analyzers. Depending on the language structure and hardware characteristics, you can hardly expect to parse more than 20,000 words per second. For heavily polysynthetic languages that figure can go as low as 200 words per second. So it's not really designed for industrial use.
+* While, in computational terms, the language described by Uniparser-morph rules is certainly regular, the description is actually NOT entirely converted into an FST. Therefore, it's not nearly as fast as FST-based analyzers. The speed varies depending on the language structure and hardware characteristics, but you can hardly expect to parse more than 20,000 words per second. For heavily polysynthetic languages that figure can go as low as 200 words per second. So it's not really designed for industrial use.
 
 The primary usage scenario I was thinking about is the following:
 
