@@ -3,6 +3,7 @@ import time
 import os
 from .morph_parser import Parser
 from .grammar import Grammar
+from .wordform import Wordform
 
 
 class Analyzer:
@@ -100,6 +101,23 @@ class Analyzer:
         if verbose:
             print('Paradigms and lexemes loaded and compiled in', time.time() - t1, 'seconds.')
 
+    def initialize_parser(self, verbose=False):
+        """
+        If the parser has not been initialized yet, initialize it.
+        """
+        if verbose:
+            print('\n\n**** Starting parser... ****\n')
+        if self.m is not None:
+            if verbose:
+                print('\n\nParser already initialized.\n')
+        else:
+            self.m = Parser(g=self.g,
+                            verbose=self.parserVerbosity,
+                            parsingMethod=self.parsingMethod)
+            self.m.fill_stems()
+            if self.parsingMethod == 'fst':
+                self.m.fill_affixes()
+
     def analyze_wordlist(self, freqListFile=None, parsedFile=None, unparsedFile=None, verbose=False):
         """
         Analyze a frequency list in a file. Write output to files with lists
@@ -113,19 +131,8 @@ class Analyzer:
         if unparsedFile is None:
             unparsedFile = self.unparsedFile
 
-        if verbose:
-            print('\n\n**** Starting parser... ****\n')
         t1 = time.time()
-        if self.m is not None:
-            if verbose:
-                print('\n\nParser already initialized\n')
-        else:
-            self.m = Parser(g=self.g,
-                            verbose=self.parserVerbosity,
-                            parsingMethod=self.parsingMethod)
-            self.m.fill_stems()
-            if self.parsingMethod == 'fst':
-                self.m.fill_affixes()
+        self.initialize_parser(verbose=verbose)
         initTime = time.time() - t1
         if verbose:
             print('Parser initialized in', initTime, 'seconds.')
@@ -150,80 +157,29 @@ class Analyzer:
         }
         return stats
 
+    def __analyze_word__(self, word):
+        """
+        Analyze a single word. Return either a list of its analyses
+        or a list with a single Wordform object that has only the wf
+        property filled. Assume the parser has already been initialized.
+        """
+        analyses = self.m.parse(word.lower())
+        if len(analyses) <= 0:
+            analyses = [Wordform(self.g, wf=word)]
+        else:
+            for ana in analyses:
+                ana.wf = word       # Reverse lowering if needed.
+        return analyses
 
-if __name__ == '__main__':
-    paradigmFile = '../paradigms.txt'
-    lexFile = '../lexemes.txt'
-    lexRulesFile = '../lex_rules.txt'
-    derivFile = '../derivations.txt'
-    conversionFile = '../stem_conversions.txt'
-    cliticFile = '../clitics.txt'
-    delAnaFile = '../bad_analyses.txt'
-    freqListFile = '../wordlist.csv'
-    freqListSeparator = '\t'
-    parserVerbosity = 0
-    parsingMethod = 'fst'
-    errorFile = None
-    parsedFile = None
-    unparsedFile = None
-    xmlOutput = True
-    for iArg in range(1, len(sys.argv)):
-        if iArg == 1 and not sys.argv[iArg].startswith('-'):
-            freqListFile = sys.argv[iArg]
-        elif sys.argv[iArg].startswith('-'):
-            command = sys.argv[iArg]['-']
-            if iArg == len(sys.argv) - 1 and command not in ['xml']:
-                print('No value specified for the parameter', command)
-                continue
-            if command in ['p', 'paradigms']:
-                paradigmFile = sys.argv[iArg + 1]
-            elif command in ['l', 'lexemes']:
-                lexFile = sys.argv[iArg + 1]
-            elif command in ['lr', 'lex_rules']:
-                lexRulesFile = sys.argv[iArg + 1]
-            elif command in ['conv', 'conversions']:
-                conversionFile = sys.argv[iArg + 1]
-            elif command in ['d', 'derivations']:
-                derivFile = sys.argv[iArg + 1]
-            elif command in ['cl', 'clitics']:
-                cliticFile = sys.argv[iArg + 1]
-            elif command in ['ba', 'bad_analyses']:
-                delAnaFile = sys.argv[iArg + 1]
-            elif command in ['pf', 'parsed']:
-                parsedFile = sys.argv[iArg + 1]
-            elif command in ['uf', 'unparsed']:
-                unparsedFile = sys.argv[iArg + 1]
-            elif command in ['el', 'error_log']:
-                errorFile = sys.argv[iArg + 1]
-            elif command in ['v', 'verbosity']:
-                try:
-                    parserVerbosity = int(sys.argv[iArg + 1])
-                except ValueError:
-                    pass
-                if parserVerbosity not in [0, 1, 2]:
-                    if parserVerbosity > 2:
-                        parserVerbosity = 2
-                    else:
-                        parserVerbosity = 0
-            elif command in ['pm', 'parsing_method']:
-                parsingMethod = sys.argv[iArg + 1]
-                if parsingMethod not in ['fst', 'hash']:
-                    print('Unrecognized parsing method, assuming fst.')
-                    parsingMethod = 'fst'
-            elif command == 'sep_colon':
-                freqListSeparator = ':'
-            elif command == 'sep_tab':
-                freqListSeparator = '\t'
-            elif command == 'sep_comma':
-                freqListSeparator = ','
-            elif command == 'sep_semicolon':
-                freqListSeparator = ';'
-            elif command == 'sep_space':
-                freqListSeparator = ' '
-            elif command == 'xml':
-                xmlOutput = True
-            elif command == 'noxml':
-                xmlOutput = False
-    analyze(freqListFile, paradigmFile, lexFile, lexRulesFile, derivFile, conversionFile,
-            cliticFile, delAnaFile, parsedFile, unparsedFile, errorFile, xmlOutput,
-            False, parserVerbosity, freqListSeparator, parsingMethod=parsingMethod)
+    def analyze_words(self, words):
+        """
+        Analyze a single word or a list of words. Return either a list of
+        Wordform objects (possible analyses of the word) or a list of lists
+        of Wordform objects (all analyses for each of the words in the list).
+        """
+        self.initialize_parser()
+        if type(words) == str:
+            return self.__analyze_word__(words)
+        elif type(words) == list:
+            return [self.__analyze_word__(w) for w in words]
+        return []

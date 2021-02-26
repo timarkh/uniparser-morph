@@ -8,13 +8,13 @@ class Wordform:
                             'trans_ru2', 'trans_en2', 'trans_de2', 'root'}
     verbosity = 0
     
-    def __init__(self, g, sublex=None, flex=None, errorHandler=None):
+    def __init__(self, g, sublex=None, flex=None, wf=None, errorHandler=None):
         self.g = g
         if errorHandler is None:
             self.errorHandler = self.g.errorHandler
         else:
             self.errorHandler = errorHandler
-        self.wf = None
+        self.wf = wf
         self.wfGlossed = ''
         self.gloss = ''
         self.lemma = ''
