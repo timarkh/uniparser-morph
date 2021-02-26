@@ -21,13 +21,17 @@ Uniparser-morph is distributed under the MIT license (see LICENSE).
 ## Usage
 Import the ``Analyzer`` class from the package. Here is a basic usage example:
 
-```
+```python
 from uniparser_morph import Analyzer
 a = Analyzer()
+
 # Put your grammar files in the current folder or set paths as properties of the Analyzer class (see below)
 a.load_grammar()
-analyses = a.analyze_words('Морфологияез')  # The parser is initialized before first use, so expect some delay here (usually several seconds)
+
+analyses = a.analyze_words('Морфологияез')
+# The parser is initialized before first use, so expect some delay here (usually several seconds)
 # You will get a list of Wordform objects
+
 # You can also pass lists (even nested lists) and specify output format ('xml' or 'json'):
 analyses = a.analyze_words([['А'], ['Мон', 'тонэ', 'яратӥсько', '.']], format='xml')
 analyses = a.analyze_words(['Морфологияез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]], format='json')
