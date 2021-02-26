@@ -7,11 +7,18 @@ def analyze(g,
             freqListFile,
             parsedFile,
             unparsedFile,
+            verbose=False,
             parserVerbosity=0,
             freqListSeparator='\t',
             glossing=True,
             parsingMethod='fst'):
-    print('\n\n**** Starting parser... ****\n')
+    """
+    Initialize parser. Read a frequency list from file and
+    analyze it. Write output to files (analyzed and unanalyzed
+    words). Return some statistics in a dictionary.
+    """
+    if verbose:
+        print('\n\n**** Starting parser... ****\n')
     t1 = time.time()
     m = Parser(g=g,
                verbose=parserVerbosity,
@@ -19,19 +26,29 @@ def analyze(g,
     m.fill_stems()
     if parsingMethod == 'fst':
         m.fill_affixes()
-    print('Parser initialized in', time.time() - t1, 'seconds.')
+    initTime = time.time() - t1
+    if verbose:
+        print('Parser initialized in', initTime, 'seconds.')
     t1 = time.time()
 
-    m.verbose = 0
-
-    nTokens, parsedRate = m.parse_freq_list(freqListFile,
-                                            sep=freqListSeparator,
-                                            fnameParsed=parsedFile,
-                                            fnameUnparsed=unparsedFile,
-                                            glossing=glossing,
-                                            maxLines=10000000000)
-    print('Frequency list processed,', parsedRate * 100, '% tokens parsed.')
-    print('Average speed:', nTokens / (time.time() - t1), 'tokens per second.')
+    nTypes, parsedRate = m.parse_freq_list(freqListFile,
+                                           sep=freqListSeparator,
+                                           fnameParsed=parsedFile,
+                                           fnameUnparsed=unparsedFile,
+                                           glossing=glossing,
+                                           maxLines=10000000000)
+    anaTime = time.time() - t1
+    if verbose:
+        print('Frequency list processed,', parsedRate * 100, '% tokens parsed.')
+        print('Average speed:', nTypes / anaTime, 'tokens per second.')
+    stats = {
+        'init_time': initTime,
+        'analysis_time': anaTime,
+        'types_processed': nTypes,
+        'words_per_second': nTypes / anaTime,
+        'percent_parsed_tokens': parsedRate * 100
+    }
+    return stats
 
 
 if __name__ == '__main__':

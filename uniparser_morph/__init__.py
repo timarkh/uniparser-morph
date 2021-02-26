@@ -97,11 +97,11 @@ class Analyzer:
         if verbose:
             print('Paradigms and lexemes loaded and compiled in', time.time() - t1, 'seconds.')
 
-    def analyze_wordlist(self, freqListFile=None, parsedFile=None, unparsedFile=None):
+    def analyze_wordlist(self, freqListFile=None, parsedFile=None, unparsedFile=None, verbose=False):
         """
         Analyze a frequency list in a file. Write output to files with lists
         of analyzed and unanalyzed words. Use default filenames if none are
-        specified as arguments.
+        specified as arguments. Return some statistics.
         """
         if freqListFile is None:
             freqListFile = self.freqListFile
@@ -110,16 +110,19 @@ class Analyzer:
         if unparsedFile is None:
             unparsedFile = self.unparsedFile
 
-        analyze(self.g,
-                freqListFile,
-                parsedFile,
-                unparsedFile,
-                parserVerbosity=self.parserVerbosity,
-                freqListSeparator=self.freqListSeparator,
-                glossing=self.glossing,
-                parsingMethod=self.parsingMethod)
+        stats = analyze(self.g,
+                        freqListFile,
+                        parsedFile,
+                        unparsedFile,
+                        verbose=verbose,
+                        parserVerbosity=self.parserVerbosity,
+                        freqListSeparator=self.freqListSeparator,
+                        glossing=self.glossing,
+                        parsingMethod=self.parsingMethod)
+        return stats
 
 
 if __name__ == '__main__':
     a = Analyzer()
-    a.analyze_wordlist()
+    stats = a.analyze_wordlist()
+    print(stats)
