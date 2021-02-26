@@ -1,7 +1,7 @@
 import time
 import os
-import grammar
-from analyze import analyze
+from .grammar import Grammar
+from .analyze import analyze
 
 
 class Analyzer:
@@ -11,7 +11,7 @@ class Analyzer:
     """
     def __init__(self, verbose_grammar=False):
         self.verboseGrammar = verbose_grammar
-        self.g = grammar.Grammar(verbose=self.verboseGrammar)   # Empty grammar
+        self.g = Grammar(verbose=self.verboseGrammar)   # Empty grammar
         self.paradigmFile = 'paradigms.txt'
         self.lexFile = 'lexemes.txt'
         self.lexRulesFile = 'lex_rules.txt'

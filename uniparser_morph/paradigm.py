@@ -1,24 +1,11 @@
-﻿from reduplication import RegexTest, Reduplication, REDUPL_SIDE_RIGHT, REDUPL_SIDE_LEFT
-import lexeme
-import re
+﻿import re
 import copy
 import time
-
-POS_UNSPECIFIED = -1
-POS_NONFINAL = 0
-POS_FINAL = 1
-POS_BOTH = 1
-
-GLOSS_EMPTY = 0
-GLOSS_AFX = 1
-GLOSS_IFX = 2
-GLOSS_REDUPL_R = 3
-GLOSS_REDUPL_L = 4
-GLOSS_STEM = 5
-GLOSS_STEM_FORCED = 6
-GLOSS_STEM_SPEC = 7
-GLOSS_NEXT_FLEX = 8
-GLOSS_STARTWITHSELF = 100
+from .reduplication import RegexTest, Reduplication, REDUPL_SIDE_RIGHT, REDUPL_SIDE_LEFT
+from .common_functions import check_for_regex
+from .common_functions import POS_UNSPECIFIED, POS_NONFINAL, POS_FINAL, POS_BOTH
+from .common_functions import GLOSS_EMPTY, GLOSS_AFX, GLOSS_IFX, GLOSS_REDUPL_R,\
+    GLOSS_REDUPL_L, GLOSS_STEM, GLOSS_STEM_FORCED, GLOSS_STEM_SPEC, GLOSS_NEXT_FLEX, GLOSS_STARTWITHSELF
 
 
 class ParadigmLink:
@@ -1173,9 +1160,9 @@ class Paradigm:
         testResult = 0
         flex2remove = set()
         for rtKey in sorted(newPara.regexTests):
-            result = lexeme.check_for_regex(sublex,
-                                            newPara.regexTests[rtKey][0],
-                                            self.errorHandler)
+            result = check_for_regex(sublex,
+                                     newPara.regexTests[rtKey][0],
+                                     self.errorHandler)
             if not result:
                 flex2remove |= newPara.regexTests[rtKey][1]
             testResult = testResult * 2 + int(result)
@@ -1191,8 +1178,8 @@ class Paradigm:
     def perform_regex_tests(self, sublex):
         testResult = 0
         for rtKey in sorted(self.regexTests):
-            result = lexeme.check_for_regex(sublex,
-                                            self.regexTests[rtKey][0],
-                                            self.errorHandler)
+            result = check_for_regex(sublex,
+                                     self.regexTests[rtKey][0],
+                                     self.errorHandler)
             testResult = testResult * 2 + int(result)
         return testResult

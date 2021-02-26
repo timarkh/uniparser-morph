@@ -1,10 +1,11 @@
 import re
 import copy
-import paradigm
-import wordform
-import clitic
-import morph_fst
 import time
+from .common_functions import GLOSS_EMPTY, GLOSS_STEM, GLOSS_STEM_FORCED, GLOSS_STARTWITHSELF, POS_NONFINAL
+from .paradigm import Paradigm
+from .wordform import Wordform
+from .clitic import SIDE_ENCLITIC, SIDE_PROCLITIC, SIDE_OTHER
+from .morph_fst import MorphFST
 
 
 class ParseState:
@@ -83,14 +84,14 @@ class Parser:
         self.errorHandler = errorHandler
         self.verbose = verbose
         self.parsingMethod = parsingMethod  # 'hash' or 'fst'
-        wordform.Wordform.verbosity = self.verbose
+        Wordform.verbosity = self.verbose
         self.wfs = {}    # list of wordforms stored in memory
                          # wordform -> [possible Wordform objects]
         self.stemStarters = {}   # letter -> [subLexemes whose firt non-empty
                                  # part starts with that letter]
                                  # (used with 'hash' parsing method)
-        self.stemFst = morph_fst.MorphFST(self.verbose)  # (used with 'fst' parsing method)
-        self.incorpFst = morph_fst.MorphFST(self.verbose)
+        self.stemFst = MorphFST(self.g, self.verbose)  # (used with 'fst' parsing method)
+        self.incorpFst = MorphFST(self.g, self.verbose)
         self.paradigmFsts = {}   # paradigm_name -> FST for its affixes
                                  # (used with 'fst' parsing method)
         self.dictParses = {}        # token -> [possible Wordform objects]
@@ -192,7 +193,7 @@ class Parser:
         """
         Return an FST made from all affixes of the paradigm.
         """
-        fst = morph_fst.MorphFST(self.g, verbose=self.verbose)
+        fst = MorphFST(self.g, verbose=self.verbose)
         for infl in para.flex:
             fst.add_affix(infl)
         # fst = fst.determinize()
@@ -234,10 +235,10 @@ class Parser:
 
     def inflexion_may_conform(self, state, infl):
         for fp in infl.flexParts[0]:
-            if fp.glossType in [paradigm.GLOSS_EMPTY,
-                                paradigm.GLOSS_STEM,
-                                paradigm.GLOSS_STEM_FORCED,
-                                paradigm.GLOSS_STARTWITHSELF]:
+            if fp.glossType in [GLOSS_EMPTY,
+                                GLOSS_STEM,
+                                GLOSS_STEM_FORCED,
+                                GLOSS_STARTWITHSELF]:
                 continue
             if fp.flex == '<.>':
                 continue
@@ -254,16 +255,16 @@ class Parser:
         """
         if len(infl.flexParts) <= 0 or len(infl.flexParts[0]) <= 0:
             return False
-        if findDerivations and infl.flexParts[0][0].glossType != paradigm.GLOSS_STARTWITHSELF:
+        if findDerivations and infl.flexParts[0][0].glossType != GLOSS_STARTWITHSELF:
             return False
         if self.infl_count(state, infl) >= self.g.RECURS_LIMIT:
             return False
         for fp in infl.flexParts[0]:
-            if fp.glossType == paradigm.GLOSS_EMPTY or len(fp.flex) <= 0:
+            if fp.glossType == GLOSS_EMPTY or len(fp.flex) <= 0:
                 continue
             else:
-                if fp.flex == '<.>' or fp.glossType in [paradigm.GLOSS_STEM,
-                                                        paradigm.GLOSS_STEM_FORCED]:
+                if fp.flex == '<.>' or fp.glossType in [GLOSS_STEM,
+                                                        GLOSS_STEM_FORCED]:
                     if self.inflexion_may_conform(state, infl):
                         return True
                     else:
@@ -324,7 +325,7 @@ class Parser:
             # print(inflStart, inflEnd, infl)
             if findDerivations and len(infl.flexParts) > 0 and\
                             len(infl.flexParts[0]) > 0 and\
-                            infl.flexParts[0][0].glossType != paradigm.GLOSS_STARTWITHSELF:
+                            infl.flexParts[0][0].glossType != GLOSS_STARTWITHSELF:
                 continue
             elif self.infl_count(state, infl) >= self.g.RECURS_LIMIT:
                 continue
@@ -390,7 +391,7 @@ class Parser:
                     return None
         # check if the lowest level contains an inflexion that requires continuation
         lastInfl = state.inflLevels[-1]['curInfl']
-        if (lastInfl.position != paradigm.POS_NONFINAL and
+        if (lastInfl.position != POS_NONFINAL and
                 any(fp.flex == '<.>' for fp in lastInfl.flexParts[0])):
             return None
         # check if inflexions at all levels have been finished
@@ -403,21 +404,21 @@ class Parser:
                         return None
                 for iPart in range(inflLevel['curPart'] + 1, len(inflLevel['curInfl'].flexParts[0])):
                     if inflLevel['curInfl'].flexParts[0][inflLevel['curPart']].glossType not in\
-                        [paradigm.GLOSS_STEM, paradigm.GLOSS_STEM_FORCED,
-                         paradigm.GLOSS_STARTWITHSELF] and\
+                        [GLOSS_STEM, GLOSS_STEM_FORCED,
+                         GLOSS_STARTWITHSELF] and\
                             len(inflLevel['curInfl'].flexParts[0][inflLevel['curPart']].flex) > 0:
                         # print(inflLevel['curInfl'].flexParts[0][inflLevel['curPart']].flex)
                         return None
         infl = copy.deepcopy(state.inflLevels[0]['curInfl'])
         for iLevel in range(1, len(state.inflLevels)):
             curLevel = state.inflLevels[iLevel]
-            paradigm.Paradigm.join_inflexions(infl, copy.deepcopy(curLevel['curInfl']),
-                                              curLevel['paraLink'],
-                                              partialCompile=self.g.PARTIAL_COMPILE)
+            Paradigm.join_inflexions(infl, copy.deepcopy(curLevel['curInfl']),
+                                     curLevel['paraLink'],
+                                     partialCompile=self.g.PARTIAL_COMPILE)
 
         if infl is None:
             return None
-        wf = wordform.Wordform(state.sl, infl)
+        wf = Wordform(self.g, state.sl, infl)
         if wf is None or wf.wf != state.wf:
             # print(infl, wf, state.wf)
             return None
@@ -443,9 +444,9 @@ class Parser:
         if curPart < len(curInfl.flexParts[0]) and\
            (curInflPos >= len(curInfl.flexParts[0][curPart].flex) or
             ((state.curStemPos < len(state.sl.stem) or state.sl.stem.endswith('.')) and
-             curInfl.flexParts[0][curPart].glossType in [paradigm.GLOSS_STEM,
-                                                         paradigm.GLOSS_STEM_FORCED,
-                                                         paradigm.GLOSS_STARTWITHSELF]) or
+             curInfl.flexParts[0][curPart].glossType in [GLOSS_STEM,
+                                                         GLOSS_STEM_FORCED,
+                                                         GLOSS_STARTWITHSELF]) or
             curInfl.flexParts[0][curPart].flex == '<.>'):
             return True
         return False
@@ -462,7 +463,7 @@ class Parser:
         if curPart >= len(curInfl.flexParts[0]) or\
            curInfl.flexParts[0][curPart].flex not in ['.', '[.]']:
             return False
-        if curInfl.flexParts[0][0].glossType == paradigm.GLOSS_STARTWITHSELF:
+        if curInfl.flexParts[0][0].glossType == GLOSS_STARTWITHSELF:
             if curPart > 1 or (state.curStemPos < 2 and state.sl.stem.startswith('.')):
                 return True
             return False
@@ -617,16 +618,16 @@ class Parser:
         """
         hostsAndClitics = [(None, word)]
         for cl in self.g.clitics:
-            if (cl.side == clitic.SIDE_ENCLITIC and
-                    cliticSide != clitic.SIDE_PROCLITIC and
+            if (cl.side == SIDE_ENCLITIC and
+                    cliticSide != SIDE_PROCLITIC and
                     word.endswith(cl.stem) and
                     len(word) > len(cl.stem)):
                 host = word[:-len(cl.stem)]
                 if not cl.is_compatible_str(host):
                     continue
                 hostsAndClitics.append((cl, host))
-            if (cl.side == clitic.SIDE_PROCLITIC and
-                    cliticSide != clitic.SIDE_ENCLITIC and
+            if (cl.side == SIDE_PROCLITIC and
+                    cliticSide != SIDE_ENCLITIC and
                     word.startswith(cl.stem) and
                     len(word) > len(cl.stem)):
                 host = word[len(cl.stem):]
@@ -740,7 +741,7 @@ class Parser:
                     if len(wf.gramm) > 0 and len(cl.gramm) > 0:
                         wf.gramm += ','
                     wf.gramm += cl.gramm
-                    if cl.side == clitic.SIDE_PROCLITIC:
+                    if cl.side == SIDE_PROCLITIC:
                         wf.gloss = cl.gloss + '=' + wf.gloss
                         wf.wfGlossed = cl.stem + '=' + wf.wfGlossed
                     else:

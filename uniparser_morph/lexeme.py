@@ -1,61 +1,7 @@
 import copy
 import json
-import re
-import wordform
-
-rxStemParts = re.compile('(\\.|[^.]+)')
-
-
-def check_compatibility(sublex, flex, errorHandler=None):
-    """
-    Check if the given SubLexeme and the given Inflexion
-    are compatible.
-    """
-    if flex.stemNum is not None and len(sublex.numStem & flex.stemNum) <= 0 and\
-            sublex.lex.num_stems() > 1:
-        return False
-    for rxTest in flex.regexTests:
-        if not check_for_regex(sublex, rxTest, errorHandler):
-            return False
-    return True
-
-
-def check_for_regex(item, rxTest, errorHandler=None, checkWordform=False):
-    """
-    Perform the given RegexTest against the given item (SubLexeme or Wordform).
-    """
-    if rxTest.field == 'stem' or rxTest.field == 'prev':
-        if not rxTest.perform(item.stem):
-            return False
-    elif rxTest.field == 'paradigm':
-        if errorHandler is not None:
-            errorHandler.raise_error('Paradigm names cannot be subject to '
-                                     'regex tests.')
-        return False
-    elif not checkWordform and rxTest.field in Lexeme.propertyFields:
-        searchField = rxTest.field
-        if searchField == 'lex':
-            searchField = 'lemma'
-        if not rxTest.perform(item.lex.__dict__[searchField]):
-            return False
-    elif checkWordform and rxTest.field in wordform.Wordform.propertyFields:
-        searchField = rxTest.field
-        if searchField == 'lex':
-            searchField = 'lemma'
-        if not rxTest.perform(item.__dict__[searchField]):
-            return False
-    else:
-        if not checkWordform:
-            testResults = [rxTest.perform(d[1])
-                           for d in item.lex.otherData
-                           if d[0] == rxTest.field]
-        else:
-            testResults = [rxTest.perform(d[1])
-                           for d in item.otherData
-                           if d[0] == rxTest.field]
-        if len(testResults) <= 0 or not all(testResults):
-            return False
-    return True
+from .common_functions import check_compatibility, lexPropertyFields, join_stem_flex
+from .wordform import Wordform
 
 
 class SubLexeme:
@@ -94,10 +40,10 @@ class SubLexeme:
             middleStem = middleStem[1:]
         if middleStem.endswith('.'):
             middleStem = middleStem[:-1]
-        wf, wfGlossed, gloss = wordform.join_stem_flex(middleStem,
-                                                       self.gloss,
-                                                       flexInTable.afx,
-                                                       bStemStarted=True)
+        wf, wfGlossed, gloss = join_stem_flex(middleStem,
+                                              self.gloss,
+                                              flexInTable.afx,
+                                              bStemStarted=True)
         return wf, wfGlossed, gloss
 
     def __repr__(self):
@@ -161,9 +107,7 @@ class Lexeme:
     A class that describes one lexeme.
     """
     obligFields = {'lex', 'stem', 'paradigm'}
-    propertyFields = {'lex', 'stem', 'paradigm', 'gramm', 'gloss',
-                      'lexref', 'stem-incorp', 'gramm-incorp',
-                      'gloss-incorp'}
+    propertyFields = lexPropertyFields
     defaultGlossFields = ['transl_en', 'transl_ru']  # property whose value is used as the stem gloss
                                      # by default if no gloss is provided
         
@@ -486,7 +430,7 @@ class Lexeme:
                 self.raise_error('No paradigm named ' + sl.paradigm)
                 continue
             for flex in self.g.paradigms[sl.paradigm].flex:
-                wf = wordform.Wordform(sl, flex, self.errorHandler)
+                wf = Wordform(self.g, sl, flex, self.errorHandler)
                 if wf.wf is None:
                     continue
                 # TODO: exceptions

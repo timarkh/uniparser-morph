@@ -1,120 +1,19 @@
-﻿import lexeme
-import paradigm
-import re
-import copy
-
-rxCleanL = re.compile('([>~\\-])-+')
-rxCleanR = re.compile('-+([<~])$')
-
-
-def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
-    """
-    Join a stem and an inflexion.
-    """
-    wfGlossed = ''
-    gloss = ''
-    wf = ''
-    pfxPart = ''
-    ifxs = ''
-    mainPart = ''
-    curStemParts = lexeme.rxStemParts.findall(stem)
-    curFlexParts = flex.flexParts[0]
-    stemSpecs = ''.join(['.' + fp.gloss for fp in curFlexParts
-                         if fp.glossType == paradigm.GLOSS_STEM_SPEC])
-    parts = [curStemParts, curFlexParts]
-    pos = [0, 0]    # current position in [stem, flex]
-    iSide = 0       # 0 = stem, 1 = flex
-    glossType = paradigm.GLOSS_STEM
-    while any(pos[i] < len(parts[i]) for i in [0, 1]):
-        if iSide == 0 and pos[iSide] == len(parts[iSide]):
-            iSide = 1
-        elif iSide == 1 and pos[iSide] == len(parts[iSide]):
-            iSide = 0
-        if (iSide == 0 and parts[iSide][pos[iSide]] in ['.', '[.]']) or\
-           (iSide == 1 and parts[iSide][pos[iSide]].flex in ['.', '[.]']):
-            pos[iSide] += 1
-            if iSide == 0:
-                iSide = 1
-            elif iSide == 1:
-                if pos[1] == 1 and not pos[0] == 1:
-                    continue
-                glossType = parts[iSide][pos[iSide] - 1].glossType
-                iSide = 0
-            continue
-        elif iSide == 1 and\
-           parts[iSide][pos[iSide]].glossType == paradigm.GLOSS_STARTWITHSELF:
-            pos[iSide] += 1
-            continue
-        curPart = parts[iSide][pos[iSide]]
-        if iSide == 0:
-            wf += curPart
-            bStemStarted = True
-            wfGlossed += curPart
-            if glossType in [paradigm.GLOSS_STEM, paradigm.GLOSS_STEM_FORCED]:
-                mainPart += stemGloss + stemSpecs
-        elif iSide == 1:
-            wf += curPart.flex.replace('0', '')
-            curFlex = curPart.flex
-            if len(curFlex) <= 0 and not curPart.glossType == paradigm.GLOSS_EMPTY:
-                curFlex = '∅'
-            if curPart.glossType == paradigm.GLOSS_AFX:
-                if bStemStarted:
-                    mainPart += '-' + curPart.gloss + '-'
-                else:
-                    pfxPart += '-' + curPart.gloss + '-'
-                wfGlossed += '-' + curFlex + '-'
-            elif curPart.glossType == paradigm.GLOSS_IFX:
-                ifxs += '<' + curPart.gloss + '>'
-                wfGlossed += '<' + curFlex + '>'
-            elif curPart.glossType == paradigm.GLOSS_REDUPL_R:
-                # if bStemStarted:
-                bStemStarted = True
-                mainPart += '-' + curPart.gloss + '~'
-                # else:
-                #     pfxPart += '-' + curPart.gloss + '~'
-                wfGlossed += '-' + curPart.flex + '~'
-            elif curPart.glossType == paradigm.GLOSS_REDUPL_L:
-                # if bStemStarted:
-                bStemStarted = True
-                mainPart += '~' + curPart.gloss + '-'
-                # else:
-                #     pfxPart += '~' + curPart.gloss + '-'
-                wfGlossed += '~' + curPart.flex + '-'
-            elif curPart.glossType == paradigm.GLOSS_STEM_SPEC:
-                wfGlossed += curPart.flex
-            elif curPart.glossType in [paradigm.GLOSS_STEM,
-                                       paradigm.GLOSS_STEM_FORCED]:
-                bStemStarted = True
-                wfGlossed += curPart.flex
-                mainPart += stemGloss + stemSpecs
-            elif curPart.glossType == paradigm.GLOSS_EMPTY:
-                bStemStarted = True
-                wfGlossed += curPart.flex
-        pos[iSide] += 1
-        gloss = pfxPart + ifxs + mainPart
-    try:
-        gloss = rxCleanL.sub('\\1', gloss).strip('-~')
-        gloss = rxCleanR.sub('\\1', gloss).strip('-~')
-        wfGlossed = rxCleanL.sub('\\1', wfGlossed).strip('-~')
-        wfGlossed = rxCleanR.sub('\\1', wfGlossed).strip('-~')
-    except:
-        pass
-    return wf, wfGlossed, gloss
+﻿import copy
+from .common_functions import wfPropertyFields, check_compatibility, join_stem_flex
 
 
 class Wordform:
-    propertyFields = {'wf', 'gloss', 'lemma', 'gramm', 'wfGlossed'}
+    propertyFields = wfPropertyFields
     printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'lex2', 'gramm2',
                             'trans_ru2', 'trans_en2', 'trans_de2', 'root'}
     verbosity = 0
     
     def __init__(self, g, sublex=None, flex=None, errorHandler=None):
         self.g = g
-        if self.errorHandler is None:
-            if errorHandler is None:
-                self.errorHandler = self.g.errorHandler
-            else:
-                self.errorHandler = errorHandler
+        if errorHandler is None:
+            self.errorHandler = self.g.errorHandler
+        else:
+            self.errorHandler = errorHandler
         self.wf = None
         self.wfGlossed = ''
         self.gloss = ''
@@ -139,7 +38,7 @@ class Wordform:
             self.raise_error('The inflexion ' + flex.flex +
                              ' is not fully compiled.')
             return
-        elif not lexeme.check_compatibility(sublex, flex):
+        elif not check_compatibility(sublex, flex):
             return
         self.add_gramm(sublex, flex)
         self.build_value(sublex, flex)

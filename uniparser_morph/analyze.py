@@ -1,5 +1,5 @@
 import sys
-import morph_parser
+from .morph_parser import Parser
 import time
 
 
@@ -13,9 +13,9 @@ def analyze(g,
             parsingMethod='fst'):
     print('\n\n**** Starting parser... ****\n')
     t1 = time.time()
-    m = morph_parser.Parser(g=g,
-                            verbose=parserVerbosity,
-                            parsingMethod=parsingMethod)
+    m = Parser(g=g,
+               verbose=parserVerbosity,
+               parsingMethod=parsingMethod)
     m.fill_stems()
     if parsingMethod == 'fst':
         m.fill_affixes()

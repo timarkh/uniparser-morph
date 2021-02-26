@@ -1,6 +1,6 @@
-import reduplication
-import lexeme
 import copy
+from .reduplication import RegexTest
+from .common_functions import check_for_regex
 
 
 class LexRule:
@@ -38,8 +38,8 @@ class LexRule:
         if wf.stem != self.stem and wf.lemma != self.lemma:
             return None
         for rxTest in self.searchFields:
-            if not lexeme.check_for_regex(wf, rxTest, errorHandler=self.errorHandler,
-                                          checkWordform=True):
+            if not check_for_regex(wf, rxTest, errorHandler=self.errorHandler,
+                                   checkWordform=True):
                 return None
         wfNew = copy.deepcopy(wf)
         wfNew.otherData += self.addFields
@@ -57,8 +57,7 @@ class LexRule:
             elif field == 'stem':
                 self.stem = value
             else:
-                self.searchFields.append(reduplication.RegexTest(field, value,
-                                                                 errorHandler=self.errorHandler))
+                self.searchFields.append(RegexTest(field, value, errorHandler=self.errorHandler))
 
     def process_add(self, dictRules):
         for rule in dictRules:

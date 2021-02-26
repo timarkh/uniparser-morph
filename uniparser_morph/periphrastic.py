@@ -1,5 +1,5 @@
 import re
-import reduplication
+from .reduplication import RegexTest
 
 
 class PeriphrasticPart:
@@ -27,8 +27,7 @@ class PeriphrasticPart:
             self.raise_error('Wrong periphrastic construction: ' + text)
             return
         for field, test in fields:
-            self.regexTests.append(reduplication.RegexTest(field, test,
-                                                           self.errorHandler))
+            self.regexTests.append(RegexTest(field, test, self.errorHandler))
         if quantifier == '*':
             self.minQty = 0
             self.maxQty = PeriphrasticPart.MAX_SCOPE

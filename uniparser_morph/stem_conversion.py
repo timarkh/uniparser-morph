@@ -1,4 +1,4 @@
-from reduplication import Replacement
+from .reduplication import Replacement
 
 
 class StemConversion:

@@ -1,5 +1,5 @@
-import reduplication
-import wordform
+from .reduplication import RegexTest
+from .wordform import Wordform
 
 SIDE_PROCLITIC = 0
 SIDE_ENCLITIC = 1
@@ -13,7 +13,7 @@ def check_for_regex(wf, rxTest, errorHandler=None):
     searchField = rxTest.field
     if searchField == 'lex':
         searchField = 'lemma'
-    if searchField in wordform.Wordform.propertyFields:
+    if searchField in Wordform.propertyFields:
         try:
             if not rxTest.perform(wf.__dict__[searchField]):
                 return False
@@ -164,8 +164,8 @@ class Clitic:
     def add_regex_test(self, obj):
         if not obj['name'].startswith('regex-'):
             return
-        self.regexTests.append(reduplication.RegexTest(obj['name'][6:], obj['value'],
-                                                       self.errorHandler))
+        self.regexTests.append(RegexTest(obj['name'][6:], obj['value'],
+                                         self.errorHandler))
         
     def get_data(self, field):
         return [v for k, v in self.otherData if k == field]

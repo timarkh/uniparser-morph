@@ -1,15 +1,15 @@
 ﻿import copy
 import json
 import re
-from ErrorHandler import ErrorHandler
-from lexeme import Lexeme
-from lex_rule import LexRule
-from clitic import Clitic
-from stem_conversion import StemConversion
-from paradigm import Paradigm
-from derivations import Derivation, deriv_for_paradigm
-from periphrastic import Periphrastic
-import yamlReader
+from .ErrorHandler import ErrorHandler
+from .lexeme import Lexeme
+from .lex_rule import LexRule
+from .clitic import Clitic
+from .stem_conversion import StemConversion
+from .paradigm import Paradigm
+from .derivations import Derivation, deriv_for_paradigm
+from .periphrastic import Periphrastic
+from .yamlReader import read_file
 
 
 class Grammar:
@@ -75,7 +75,7 @@ class Grammar:
             fnames = [fnames]
         descrs = []
         for fname in fnames:
-            descrs += yamlReader.read_file(fname, self.errorHandler)
+            descrs += read_file(fname, self.errorHandler)
         return descrs
 
     def load_stem_conversions(self, fnames):

@@ -2,6 +2,16 @@
 **.idea/**
 __pycache__/
 uniparser-morph/errors.log
+errors.log
+wordlist.csv
+analyzed.txt
+unanalyzed.txt
+import_test.py
+lexemes.txt
+paradigms.txt
+bad_analyses.txt
+derivations.txt
+lex_rules.txt
 .Python
 env/
 build/
