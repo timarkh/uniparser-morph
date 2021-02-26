@@ -113,6 +113,24 @@ class Wordform:
                 r += ' ' + field + '="' + value.replace('"', "'") + '"'
         return r + '></ana>'
 
+    def to_json(self, glossing=True):
+        """
+        Return a JSON representation of the analysis.
+        If glossing is True, include the glossing information.
+        """
+        r = {
+            'wf': self.wf,
+            'lemma': self.lemma,
+            'gr': [tag for tag in self.gramm.split(',') if len(tag) > 0]
+        }
+        if glossing:
+            r['parts'] = self.wfGlossed
+            r['gloss'] = self.gloss
+        for field, value in self.otherData:
+            if field in Wordform.printableOtherFields:
+                r[field] = value
+        return r
+
     def __repr__(self):
         r = '<Wordform object>\n'
         if self.wf is not None:

@@ -1,6 +1,6 @@
-import sys
 import time
 import os
+import html
 from .morph_parser import Parser
 from .grammar import Grammar
 from .wordform import Wordform
@@ -157,7 +157,7 @@ class Analyzer:
         }
         return stats
 
-    def __analyze_word__(self, word):
+    def __analyze_word__(self, word, format=None):
         """
         Analyze a single word. Return either a list of its analyses
         or a list with a single Wordform object that has only the wf
@@ -165,21 +165,33 @@ class Analyzer:
         """
         analyses = self.m.parse(word.lower())
         if len(analyses) <= 0:
-            analyses = [Wordform(self.g, wf=word)]
+            if format == 'xml':
+                analyses = '<w>' + html.escape(word) + '</w>'
+            else:
+                analyses = [Wordform(self.g, wf=word)]
         else:
             for ana in analyses:
                 ana.wf = word       # Reverse lowering if needed.
+            if format == 'xml':
+                analyses = '<w>' + ''.join(ana.to_xml(glossing=self.glossing)
+                                           for ana in analyses) +\
+                           html.escape(word) + '</w>'
+        if format == 'json':
+            analyses = [ana.to_json() for ana in analyses]
         return analyses
 
-    def analyze_words(self, words):
+    def analyze_words(self, words, format=None):
         """
-        Analyze a single word or a list of words. Return either a list of
-        Wordform objects (possible analyses of the word) or a list of lists
-        of Wordform objects (all analyses for each of the words in the list).
+        Analyze a single word or a (possibly nested) list of words. Return either a list of
+        analyses (all possible analyses of the word) or a nested list of lists
+        of analyses with the same depth as the original list.
+        If format is None, the analyses are Wordform objects.
+        If format == 'xml', the analyses for each word are united into an XML string.
+        If format == 'json', the analyses are JSON objects (dictionaries).
         """
         self.initialize_parser()
         if type(words) == str:
-            return self.__analyze_word__(words)
+            return self.__analyze_word__(words, format=format)
         elif type(words) == list:
-            return [self.__analyze_word__(w) for w in words]
+            return [self.analyze_words(w, format=format) for w in words]
         return []
