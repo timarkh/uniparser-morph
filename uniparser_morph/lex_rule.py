@@ -13,7 +13,8 @@ class LexRule:
     Each rule must indicate either a lemma or a stem to which
     it is applicable.
     """
-    def __init__(self, dictRule, errorHandler=None):
+    def __init__(self, g, dictRule, errorHandler=None):
+        self.g = g
         self.errorHandler = errorHandler
         self.rxWhat = None
         self.stem = None

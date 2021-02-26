@@ -2,61 +2,54 @@
 import json
 import re
 from ErrorHandler import ErrorHandler
-import lexeme
-import lex_rule
-import clitic
+from lexeme import Lexeme
+from lex_rule import LexRule
+from clitic import Clitic
 from stem_conversion import StemConversion
-import paradigm
-import derivations
-import periphrastic
+from paradigm import Paradigm
+from derivations import Derivation, deriv_for_paradigm
+from periphrastic import Periphrastic
 import yamlReader
 
 
 class Grammar:
-    """The main class of the project."""
-
-    RECURS_LIMIT = 2            # max number of times every given paradigm
-                                # may appear in a wordform
-    # paradigm compilation options
-    PARTIAL_COMPILE = True      # compile until the following restrictions are met:
-    MIN_FLEX_LENGTH = 1         # when PARTIAL_COMPILE is set
-    MAX_COMPILE_TIME = 60       # when PARTIAL_COMPILE is set
-
-    DERIV_LIMIT = 5             # counts only non-empty derivands
-    FLEX_LENGTH_LIMIT = 20      # max inflexion length (without metacharacters)
-    TOTAL_DERIV_LIMIT = 10      # counts everything
-    MAX_DERIVATIONS = 2         # how many derivation models can appear in a word
-
-    lexemes = []
-    lexRulesByStem = {}
-    lexRulesByLemma = {}
-    clitics = []
-    paradigms = {}         # name -> Paradigm object
-    lexByParadigm = {}     # paradigm name -> links to sublexemes which
-                           # have that paradigm in the form (lex, subLex)
-    stemConversions = {}
-    derivations = {}
-    badAnalyses = []
-    errorHandler = None
+    """
+    The main class of the project that contains all loaded data
+    and structures generated from it.
+    """
     
     def __init__(self, errorHandlerFileName=None, errorHandler=None, verbose=False):
         self.verbose = verbose
         if errorHandler is None:
             if errorHandlerFileName is not None and len(errorHandlerFileName) > 0:
-                Grammar.errorHandler = ErrorHandler(filename=errorHandlerFileName)
+                self.errorHandler = ErrorHandler(filename=errorHandlerFileName)
             else:
-                Grammar.errorHandler = ErrorHandler()
+                self.errorHandler = ErrorHandler()
         else:
-            Grammar.errorHandler = errorHandler
-        Grammar.lexemes = []
-        Grammar.lexRulesByStem = {}
-        Grammar.lexRulesByLemma = {}
-        Grammar.clitics = []
-        Grammar.paradigms = {}
-        Grammar.lexByParadigm = {}
-        Grammar.stemConversions = {}
-        Grammar.derivations = {}
-        Grammar.badAnalyses = []
+            self.errorHandler = errorHandler
+
+        self.RECURS_LIMIT = 2        # max number of times every given paradigm
+                                     # may appear in a wordform
+                                     # paradigm compilation options
+        self.PARTIAL_COMPILE = True  # compile until the following restrictions are met:
+        self.MIN_FLEX_LENGTH = 1     # when PARTIAL_COMPILE is set
+        self.MAX_COMPILE_TIME = 60   # when PARTIAL_COMPILE is set
+
+        self.DERIV_LIMIT = 5         # counts only non-empty derivands
+        self.FLEX_LENGTH_LIMIT = 20  # max inflexion length (without metacharacters)
+        self.TOTAL_DERIV_LIMIT = 10  # counts everything
+        self.MAX_DERIVATIONS = 2     # how many derivation models can appear in a word
+
+        self.lexemes = []
+        self.lexRulesByStem = {}
+        self.lexRulesByLemma = {}
+        self.clitics = []
+        self.paradigms = {}          # name -> Paradigm object
+        self.lexByParadigm = {}      # paradigm name -> links to sublexemes which
+                                     # have that paradigm in the form (lex, subLex)
+        self.stemConversions = {}
+        self.derivations = {}
+        self.badAnalyses = []
 
     @staticmethod
     def raise_error(message, data=None):
@@ -113,8 +106,8 @@ class Grammar:
         paraDescrs = self.load_yaml_descrs(fnames)
         for dictDescr in paraDescrs:
             try:
-                Grammar.paradigms[dictDescr['value']] =\
-                                  paradigm.Paradigm(dictDescr, self.errorHandler)
+                self.paradigms[dictDescr['value']] =\
+                               Paradigm(self, dictDescr, self.errorHandler)
             except MemoryError:
                 self.raise_error('Not enough memory for the paradigms.')
                 return
@@ -127,8 +120,8 @@ class Grammar:
                 self.log_message('paradigm ' + pName + ' compiled: ' +
                                  str(len(p.flex)) + ' inflections')
                 newParadigms[pName] = p
-            Grammar.paradigms = newParadigms
-        return len(Grammar.paradigms)
+            self.paradigms = newParadigms
+        return len(self.paradigms)
 
     def load_lexemes(self, fnames):
         """
@@ -140,7 +133,7 @@ class Grammar:
             if dictDescr is None or len(dictDescr) <= 0:
                 continue
             try:
-                self.lexemes.append(lexeme.Lexeme(dictDescr, self.errorHandler))
+                self.lexemes.append(Lexeme(self, dictDescr, self.errorHandler))
                 if self.verbose:
                     self.log_message('New lexeme: ' + self.lexemes[-1].lemma)
             except MemoryError:
@@ -158,19 +151,19 @@ class Grammar:
             if dictDescr is None or len(dictDescr) <= 0:
                 continue
             try:
-                lr = lex_rule.LexRule(dictDescr, self.errorHandler)
+                lr = LexRule(self, dictDescr, self.errorHandler)
                 if lr.stem is not None:
                     try:
-                        Grammar.lexRulesByStem[lr.stem].append(lr)
+                        self.lexRulesByStem[lr.stem].append(lr)
                     except KeyError:
-                        Grammar.lexRulesByStem[lr.stem] = [lr]
+                        self.lexRulesByStem[lr.stem] = [lr]
                     if self.verbose:
                         self.log_message('New lexical rule for stem ' + lr.stem)
                 elif lr.lemma is not None:
                     try:
-                        Grammar.lexRulesByLemma[lr.lemma].append(lr)
+                        self.lexRulesByLemma[lr.lemma].append(lr)
                     except KeyError:
-                        Grammar.lexRulesByLemma[lr.lemma] = [lr]
+                        self.lexRulesByLemma[lr.lemma] = [lr]
                     if self.verbose:
                         self.log_message('New lexical rule for lemma ' + lr.lemma)
                 else:
@@ -179,7 +172,7 @@ class Grammar:
             except MemoryError:
                 self.raise_error('Not enough memory for the lexical rules.')
                 return
-        return len(Grammar.lexRulesByLemma) + len(Grammar.lexRulesByStem)
+        return len(self.lexRulesByLemma) + len(self.lexRulesByStem)
 
     def load_clitics(self, fnames):
         """Load clitics from the file or files specified by fnames.
@@ -189,7 +182,7 @@ class Grammar:
             if dictDescr is None or len(dictDescr) <= 0:
                 continue
             try:
-                self.clitics.append(clitic.Clitic(dictDescr, self.errorHandler))
+                self.clitics.append(Clitic(self, dictDescr, self.errorHandler))
             except MemoryError:
                 self.raise_error('Not enough memory for the clitics.')
                 return
@@ -203,14 +196,14 @@ class Grammar:
             dictDescr['value'] = '#deriv#' + dictDescr['value']
             try:
                 self.derivations[dictDescr['value']] =\
-                                  derivations.Derivation(dictDescr, self.errorHandler)
+                                  Derivation(self, dictDescr, self.errorHandler)
             except MemoryError:
                 self.raise_error('Not enough memory for the derivations.')
                 return
         if len(derivDescrs) <= 0:
             return 0
         for paradigm in self.paradigms.values():
-            derivations.deriv_for_paradigm(paradigm)
+            deriv_for_paradigm(self, paradigm)
         for derivName, deriv in self.derivations.items():
             if derivName.startswith('#deriv#paradigm#'):
                 deriv.build_links()
@@ -258,7 +251,7 @@ class Grammar:
                 self.raise_error('Error when opening a bad analyses file: ' + fname)
             except json.JSONDecodeError:
                 self.raise_error('JSON error when reading a bad analyses file: ' + fname)
-        Grammar.badAnalyses = []
+        self.badAnalyses = []
         for ana in tmpBadAnalyses:
             if type(ana) != dict:
                 continue
@@ -274,7 +267,7 @@ class Grammar:
                     break
             if bAnaOk:
                 self.badAnalyses.append(ana)
-        return len(Grammar.badAnalyses)
+        return len(self.badAnalyses)
 
     def add_deriv_links_to_paradigms(self):
         """
@@ -311,6 +304,12 @@ class Grammar:
                 except KeyError:
                     self.lexByParadigm[sl.paradigm] = [(lex, sl)]
         self.log_message('Starting paradigm compilation...')
+
+    def __deepcopy__(self, memo):
+        """
+        Do not create multiple instances even when calling deepcopy.
+        """
+        return self
 
 
 if __name__ == '__main__':

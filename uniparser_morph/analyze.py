@@ -1,68 +1,21 @@
-# This is the script you should start with.
-
 import sys
-import os
-import grammar
 import morph_parser
 import time
 
 
-def collect_filenames(s):
-    """
-    Check if the string s contains a name of a file or a directory.
-    If the latter is true, return the list of .txt and .yaml files
-    in the subtree. Otherwise, return [s].
-    """
-    filenames = []
-    if os.path.isdir(s):
-        for root, dirs, files in os.walk(s):
-            for fname in files:
-                if not fname.lower().endswith(('.txt', '.yaml')):
-                    continue
-                filenames.append(os.path.join(root, fname))
-    else:
-        if os.path.exists(s):
-            filenames = [s]
-    return filenames
-
-
-def analyze(freqListFile, paradigmFile, lexFile, lexRulesFile,
-            derivFile, conversionFile, cliticFile, delAnaFile,
-            parsedFile, unparsedFile, errorFile,
-            xmlOutput=True, verboseGrammar=False, parserVerbosity=0,
-            freqListSeparator='\t', glossing=True,
-            parsingMethod='fst', partialCompile=True,
-            minFlexLen=4, maxCompileTime=60):
-    t1 = time.time()
-    g = grammar.Grammar(verbose=verboseGrammar)
-    grammar.Grammar.PARTIAL_COMPILE = partialCompile
-    grammar.Grammar.MIN_FLEX_LENGTH = minFlexLen
-    grammar.Grammar.MAX_COMPILE_TIME = maxCompileTime
-    paradigmFiles = collect_filenames(paradigmFile)
-    lexFiles = collect_filenames(lexFile)
-    lexRulesFiles = collect_filenames(lexRulesFile)
-    derivFiles = collect_filenames(derivFile)
-    conversionFiles = collect_filenames(conversionFile)
-    cliticFiles = collect_filenames(cliticFile)
-    delAnaFiles = collect_filenames(delAnaFile)
-
-    if parsedFile is None or len(parsedFile) <= 0:
-        parsedFile = freqListFile + '-parsed.txt'
-    if unparsedFile is None or len(unparsedFile) <= 0:
-        unparsedFile = freqListFile + '-unparsed.txt'
-
-    print(g.load_stem_conversions(conversionFiles), 'stem conversions loaded.')
-    print(g.load_paradigms(paradigmFiles, compileParadigms=False), 'paradigms loaded.')
-    print(g.load_lexemes(lexFiles), 'lexemes loaded.')
-    print(g.load_lex_rules(lexRulesFiles), 'lexical rules loaded.')
-    print(g.load_derivations(derivFiles), 'derivations loaded.')
-    print(g.load_clitics(cliticFiles), 'clitics loaded.')
-    print(g.load_bad_analyses(delAnaFiles), 'bad analyses loaded.')
-    g.compile_all()
-    print('Paradigms and lexemes loaded and compiled in', time.time() - t1, 'seconds.')
+def analyze(g,
+            freqListFile,
+            parsedFile,
+            unparsedFile,
+            parserVerbosity=0,
+            freqListSeparator='\t',
+            glossing=True,
+            parsingMethod='fst'):
     print('\n\n**** Starting parser... ****\n')
     t1 = time.time()
-    m = morph_parser.Parser(verbose=parserVerbosity, parsingMethod=parsingMethod)
+    m = morph_parser.Parser(g=g,
+                            verbose=parserVerbosity,
+                            parsingMethod=parsingMethod)
     m.fill_stems()
     if parsingMethod == 'fst':
         m.fill_affixes()

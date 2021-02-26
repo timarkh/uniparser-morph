@@ -1,5 +1,4 @@
 import re
-import grammar
 import reduplication
 
 
@@ -9,10 +8,11 @@ class PeriphrasticPart:
     """
     MAX_SCOPE = 16   # max number of tokens parser will check with * or + quantifiers
 
-    def __init__(self, text, quantifier='', errorHandler=None):
+    def __init__(self, g, text, quantifier='', errorHandler=None):
+        self.g = g
         if errorHandler is None:
             if self.errorHandler is None:
-                self.errorHandler = grammar.Grammar.errorHandler
+                self.errorHandler = self.g.errorHandler
         else:
             self.errorHandler = errorHandler
 
@@ -63,10 +63,11 @@ class Periphrastic:
     """
     A periphrastic construction.
     """
-    def __init__(self, text, errorHandler=None):
+    def __init__(self, g, text, errorHandler=None):
+        self.g = g
         if errorHandler is None:
             if self.errorHandler is None:
-                self.errorHandler = grammar.Grammar.errorHandler
+                self.errorHandler = self.g.errorHandler
         else:
             self.errorHandler = errorHandler
 

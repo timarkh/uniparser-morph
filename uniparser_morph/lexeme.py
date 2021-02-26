@@ -1,7 +1,6 @@
 import copy
 import json
 import re
-import grammar
 import wordform
 
 rxStemParts = re.compile('(\\.|[^.]+)')
@@ -168,7 +167,8 @@ class Lexeme:
     defaultGlossFields = ['transl_en', 'transl_ru']  # property whose value is used as the stem gloss
                                      # by default if no gloss is provided
         
-    def __init__(self, dictDescr, errorHandler=None):
+    def __init__(self, g, dictDescr, errorHandler=None):
+        self.g = g
         self.lemma = ''
         self.lexref = ''
         self.stem = ''
@@ -363,7 +363,7 @@ class Lexeme:
             for p in pGroup:
                 for pVariant in p:
                     try:
-                        newStemConversionLinks = grammar.Grammar.paradigms[pVariant].conversion_links
+                        newStemConversionLinks = self.g.paradigms[pVariant].conversion_links
                         for cl in newStemConversionLinks:
                             self.otherData.append(['conversion-link', cl])
                     except KeyError:
@@ -444,48 +444,48 @@ class Lexeme:
                                   if t[0] == 'conversion-link')
         for scName in stemConversionNames:
             try:
-                grammar.Grammar.stemConversions[scName].convert(stems)
+                self.g.stemConversions[scName].convert(stems)
             except KeyError:
                 self.raise_error('No stem conversion named ' + scName)
 
     def generate_redupl_paradigm(self):
         """Create new paradigms with reduplicated parts of this particular
         lexeme or change the references if they already exist."""
-        if len(grammar.Grammar.paradigms) <= 0:
+        if len(self.g.paradigms) <= 0:
             self.raise_error('Paradigms must be loaded before lexemes.')
             return
         for sl in self.subLexemes:
-            if sl.paradigm not in grammar.Grammar.paradigms:
+            if sl.paradigm not in self.g.paradigms:
                 self.raise_error('No paradigm named ' + sl.paradigm)
                 continue
-            paraReduplName = grammar.Grammar.paradigms[sl.paradigm].fork_redupl(sl)
+            paraReduplName = self.g.paradigms[sl.paradigm].fork_redupl(sl)
             sl.paradigm = paraReduplName
 
     def generate_regex_paradigm(self):
         """Create new paradigms where all inflexions with regexes that
         don't match to the particular stem of this lexeme are deleted
         or change the references if they already exist."""
-        if len(grammar.Grammar.paradigms) <= 0:
+        if len(self.g.paradigms) <= 0:
             self.raise_error('Paradigms must be loaded before lexemes.')
             return
         for sl in self.subLexemes:
-            if sl.paradigm not in grammar.Grammar.paradigms:
+            if sl.paradigm not in self.g.paradigms:
                 self.raise_error('No paradigm named ' + sl.paradigm)
                 continue
-            paraRegexName = grammar.Grammar.paradigms[sl.paradigm].fork_regex(sl)
+            paraRegexName = self.g.paradigms[sl.paradigm].fork_regex(sl)
             sl.paradigm = paraRegexName
 
     def generate_wordforms(self):
         """Generate a list of all possible wordforms with this lexeme."""
-        if len(grammar.Grammar.paradigms) <= 0:
+        if len(self.g.paradigms) <= 0:
             self.raise_error('Paradigms must be loaded before lexemes.')
             return
         wordforms = []
         for sl in self.subLexemes:
-            if sl.paradigm not in grammar.Grammar.paradigms:
+            if sl.paradigm not in self.g.paradigms:
                 self.raise_error('No paradigm named ' + sl.paradigm)
                 continue
-            for flex in grammar.Grammar.paradigms[sl.paradigm].flex:
+            for flex in self.g.paradigms[sl.paradigm].flex:
                 wf = wordform.Wordform(sl, flex, self.errorHandler)
                 if wf.wf is None:
                     continue
@@ -498,7 +498,7 @@ class Lexeme:
         subLexemes2add = []
         for sl in self.subLexemes:
             derivName = '#deriv#paradigm#' + sl.paradigm
-            if derivName in grammar.Grammar.paradigms:
+            if derivName in self.g.paradigms:
                 slNew = copy.deepcopy(sl)
                 slNew.paradigm = derivName
                 subLexemes2add.append(slNew)

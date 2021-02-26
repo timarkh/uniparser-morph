@@ -1,28 +1,27 @@
-import grammar
 import copy
 import json
 import re
 from paradigm import Paradigm
 
 
-def deriv_for_paradigm(paradigm):
+def deriv_for_paradigm(g, paradigm):
     """
     Generate a Derivation object for the given paradigm.
     """
     derivLinks = {}     # recurs_class -> set of Derivation names
     maxRecursClass = 0
     for derivLink in paradigm.derivLinks:
-        recursClass, derivLink = get_recurs_class(derivLink)
+        recursClass, derivLink = get_recurs_class(g, derivLink)
         # print(recursClass, derivLink['value'])
         if maxRecursClass < recursClass:
             maxRecursClass = recursClass
-        pName = fork_deriv(derivLink, paradigm.name)
+        pName = fork_deriv(g, derivLink, paradigm.name)
         if len(pName) > 0:
             try:
                 derivLinks[recursClass].add(pName)
             except KeyError:
                 derivLinks[recursClass] = {pName}
-    handle_recurs_classes(derivLinks, maxRecursClass)
+    handle_recurs_classes(g, derivLinks, maxRecursClass)
     unifiedDerivContent = []
     for derivNamesSet in derivLinks.values():
         for derivName in derivNamesSet:
@@ -32,12 +31,12 @@ def deriv_for_paradigm(paradigm):
     if len(unifiedDerivContent) <= 0:
         return
     unifiedName = '#deriv#paradigm#' + paradigm.name
-    unifiedDeriv = Derivation({'name': 'deriv-type', 'value': unifiedName,
-                               'content': unifiedDerivContent})
-    grammar.Grammar.derivations[unifiedName] = unifiedDeriv
+    unifiedDeriv = Derivation(g, {'name': 'deriv-type', 'value': unifiedName,
+                                  'content': unifiedDerivContent})
+    g.derivations[unifiedName] = unifiedDeriv
 
 
-def fork_deriv(derivLink, paradigmName):
+def fork_deriv(g, derivLink, paradigmName):
     """
     Create a new derivation with customized properties on the basis
     of an existing one.
@@ -45,10 +44,9 @@ def fork_deriv(derivLink, paradigmName):
     """
     derivName = derivLink['value']
     try:
-        newDeriv = copy.deepcopy(grammar.Grammar.derivations['#deriv#' +
-                                                             derivName])
+        newDeriv = copy.deepcopy(g.derivations['#deriv#' + derivName])
     except KeyError:
-        grammar.Grammar.raise_error('No derivation named ' + derivName)
+        g.raise_error('No derivation named ' + derivName)
         return ''
     existingParadigms = newDeriv.find_property('paradigm')
     if len(existingParadigms) <= 0:
@@ -60,11 +58,11 @@ def fork_deriv(derivLink, paradigmName):
             newDeriv.add_property(obj['name'], obj['value'])
     newDerivName = newDeriv.dictDescr['value'] + '#paradigm#' + paradigmName
     newDeriv.dictDescr['value'] = newDerivName
-    grammar.Grammar.derivations[newDerivName] = newDeriv
+    g.derivations[newDerivName] = newDeriv
     return newDerivName
 
 
-def get_recurs_class(derivLink):
+def get_recurs_class(g, derivLink):
     """Find the recurs_class property in the contents.
     Return its value and the dictionary with recurs_value removed."""
     recursClass = 0
@@ -77,13 +75,13 @@ def get_recurs_class(derivLink):
             try:
                 recursClass = int(obj['value'])
             except ValueError:
-                grammar.Grammar.raise_error('Incorrect recurs_class value: ' +
+                g.raise_error('Incorrect recurs_class value: ' +
                                             obj['value'])
             newDerivLink['content'].pop(iObj)
     return recursClass, newDerivLink
 
 
-def handle_recurs_classes(derivLinks, maxRecursClass):
+def handle_recurs_classes(g, derivLinks, maxRecursClass):
     """
     For every derivation in the dictionary, add links to the derivations
     with recurs_class less than recurs_class of that derivation.
@@ -105,9 +103,9 @@ def handle_recurs_classes(derivLinks, maxRecursClass):
         linksExtension = []
         for derivName in curDerivLinks:
             try:
-                deriv = grammar.Grammar.derivations[derivName]
+                deriv = g.derivations[derivName]
             except KeyError:
-                grammar.Grammar.raise_error('No derivation named ' + derivName)
+                g.raise_error('No derivation named ' + derivName)
                 continue
             for link in links:
                 deriv.add_dict_property(link)
@@ -122,14 +120,14 @@ def handle_recurs_classes(derivLinks, maxRecursClass):
         links += linksExtension
 
 
-def add_restricted(recursCtr, restrictedDerivs):
+def add_restricted(g, recursCtr, restrictedDerivs):
     recursCtr = recursCtr.copy()
     for rd in restrictedDerivs:
-        recursCtr[rd] = grammar.Grammar.RECURS_LIMIT + 1
+        recursCtr[rd] = g.RECURS_LIMIT + 1
     return recursCtr
 
 
-def extend_leaves(data, sourceParadigm, recursCtr=None,
+def extend_leaves(g, data, sourceParadigm, recursCtr=None,
                   removeLong=False, depth=0):
     # recursCtr: derivation name -> number of times it has been used
     if recursCtr is None:
@@ -149,31 +147,30 @@ def extend_leaves(data, sourceParadigm, recursCtr=None,
                 recursCtr[shortName] += 1
             except KeyError:
                 recursCtr[shortName] = 1
-            if recursCtr[shortName] > grammar.Grammar.RECURS_LIMIT or \
-                    depth > grammar.Grammar.DERIV_LIMIT:
+            if recursCtr[shortName] > g.RECURS_LIMIT or \
+                    depth > g.DERIV_LIMIT:
                 if removeLong:
                     data.pop(iObj)
                 continue
             try:
-                deriv = grammar.Grammar.derivations[obj['value']]
+                deriv = g.derivations[obj['value']]
             except KeyError:
                 continue
-            recursCtrNext = add_restricted(recursCtr, deriv.restrictedDerivs)
-            extend_leaves(obj['content'], sourceParadigm,
+            recursCtrNext = add_restricted(g, recursCtr, deriv.restrictedDerivs)
+            extend_leaves(g, obj['content'], sourceParadigm,
                           recursCtrNext, removeLong, depth)
         else:
             # print obj['value']
-            if depth > grammar.Grammar.DERIV_LIMIT or obj['value'] == sourceParadigm:
+            if depth > g.DERIV_LIMIT or obj['value'] == sourceParadigm:
                 continue
             try:
-                deriv = grammar.Grammar.derivations['#deriv#paradigm#' +
-                                                    obj['value']]
+                deriv = g.derivations['#deriv#paradigm#' + obj['value']]
             except KeyError:
                 continue
             subsequentDerivs = copy.deepcopy(deriv.find_property('paradigm'))
             # print(json.dumps(subsequentDerivs, indent=1))
-            recursCtrNext = add_restricted(recursCtr, deriv.restrictedDerivs)
-            extend_leaves(subsequentDerivs, sourceParadigm,
+            recursCtrNext = add_restricted(g, recursCtr, deriv.restrictedDerivs)
+            extend_leaves(g, subsequentDerivs, sourceParadigm,
                           recursCtrNext, True, depth)
             data2add += subsequentDerivs
     data += data2add
@@ -186,12 +183,13 @@ class Derivation:
     paradigms.
     """
 
-    def __init__(self, dictDescr, errorHandler=None):
+    def __init__(self, g, dictDescr, errorHandler=None):
+        self.g = g
         self.dictDescr = copy.deepcopy(dictDescr)
         if self.dictDescr['content'] is None:
             self.dictDescr['content'] = []
         if errorHandler is None:
-            self.errorHandler = grammar.Grammar.errorHandler
+            self.errorHandler = self.g.errorHandler
         else:
             self.errorHandler = errorHandler
         self.restrictedDerivs = set()
@@ -233,7 +231,7 @@ class Derivation:
                 continue
             newDerivLink = copy.deepcopy(derivLink)
             try:
-                targetDeriv = grammar.Grammar.derivations[newDerivLink['value']]
+                targetDeriv = self.g.derivations[newDerivLink['value']]
             except KeyError:
                 self.raise_error('No derivation named ' + newDerivLink['value'])
                 continue
@@ -256,11 +254,11 @@ class Derivation:
         paradigmName = m.group(1)
         recursCtr = {}
         for derivName in self.restrictedDerivs:
-            recursCtr[derivName] = grammar.Grammar.RECURS_LIMIT + 1
-        extend_leaves(self.dictDescr['content'], paradigmName, recursCtr)
+            recursCtr[derivName] = self.g.RECURS_LIMIT + 1
+        extend_leaves(self.g, self.dictDescr['content'], paradigmName, recursCtr)
 
     def to_paradigm(self):
         """
         Create a paradigm from self.dictDescr and return it.
         """
-        return Paradigm(self.dictDescr, self.errorHandler)
+        return Paradigm(self.g, self.dictDescr, self.errorHandler)

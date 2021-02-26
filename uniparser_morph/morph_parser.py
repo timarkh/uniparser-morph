@@ -1,6 +1,5 @@
 import re
 import copy
-import grammar
 import paradigm
 import wordform
 import clitic
@@ -77,9 +76,10 @@ class Parser:
                                '[\\w\\-\'`´‘’‛/@.,]+?)'
                                '([^\\w]*)$')
 
-    def __init__(self, verbose=0, parsingMethod='fst', errorHandler=None):
+    def __init__(self, g, verbose=0, parsingMethod='fst', errorHandler=None):
+        self.g = g
         if errorHandler is None:
-            errorHandler = grammar.Grammar.errorHandler
+            errorHandler = self.g.errorHandler
         self.errorHandler = errorHandler
         self.verbose = verbose
         self.parsingMethod = parsingMethod  # 'hash' or 'fst'
@@ -97,7 +97,7 @@ class Parser:
 
     def raise_error(self, message, data=None):
         if self.errorHandler is None:
-            self.errorHandler = grammar.Grammar.errorHandler
+            self.errorHandler = self.g.errorHandler
         self.errorHandler.raise_error(message, data)
 
     def print_stem_starters(self):
@@ -125,7 +125,7 @@ class Parser:
         """
         Prepare hash table with the stems ('hash' parsing method)
         """
-        for l in grammar.Grammar.lexemes:
+        for l in self.g.lexemes:
             curStemStarters = {}
             for sl in l.subLexemes:
                 m = self.rxFirstNonEmptyPart.search(sl.stem)
@@ -150,7 +150,7 @@ class Parser:
         """
         Prepare FST with the stems ('fst' parsing method)
         """
-        for l in grammar.Grammar.lexemes:
+        for l in self.g.lexemes:
             for sl in l.subLexemes:
                 m = self.rxFirstNonEmptyPart.search(sl.stem)
                 if m is None:
@@ -164,7 +164,7 @@ class Parser:
         """
         Prepare FST with the incorporation versions of the stems.
         """
-        for l in grammar.Grammar.lexemes:
+        for l in self.g.lexemes:
             for sl in l.subLexemes:
                 if not sl.noIncorporation:
                     m = self.rxFirstNonEmptyPart.search(sl.stem)
@@ -192,7 +192,7 @@ class Parser:
         """
         Return an FST made from all affixes of the paradigm.
         """
-        fst = morph_fst.MorphFST(verbose=self.verbose)
+        fst = morph_fst.MorphFST(self.g, verbose=self.verbose)
         for infl in para.flex:
             fst.add_affix(infl)
         # fst = fst.determinize()
@@ -203,21 +203,20 @@ class Parser:
         Add affixes from all paradigms to the FSTs. This step is
         necessary only when parsing method is set to 'fst'.
         """
-        for p in grammar.Grammar.paradigms:
+        for p in self.g.paradigms:
             if self.verbose > 1:
                 print('Making an FST for', p, '...')
-            para = grammar.Grammar.paradigms[p]
+            para = self.g.paradigms[p]
             self.paradigmFsts[p] = self.make_paradigm_fst(para)
         if self.verbose > 0:
             print('Created FSTs for', len(self.paradigmFsts), 'paradigms.')
 
-    @staticmethod
-    def is_bad_analysis(wf):
+    def is_bad_analysis(self, wf):
         """
         Check if the given analysis is not in the list of bad analyses
         in the Grammar.
         """
-        for badAna in grammar.Grammar.badAnalyses:
+        for badAna in self.g.badAnalyses:
             bAnalysisConforms = True
             for k, v in badAna.items():
                 try:
@@ -257,7 +256,7 @@ class Parser:
             return False
         if findDerivations and infl.flexParts[0][0].glossType != paradigm.GLOSS_STARTWITHSELF:
             return False
-        if self.infl_count(state, infl) >= grammar.Grammar.RECURS_LIMIT:
+        if self.infl_count(state, infl) >= self.g.RECURS_LIMIT:
             return False
         for fp in infl.flexParts[0]:
             if fp.glossType == paradigm.GLOSS_EMPTY or len(fp.flex) <= 0:
@@ -306,7 +305,7 @@ class Parser:
             paraFst = self.paradigmFsts[paraName]
         except KeyError:
             self.raise_error('No FST for the paradigm ' + paraName)
-            para = grammar.Grammar.paradigms[paraName]
+            para = self.g.paradigms[paraName]
             return self.find_inflexions_simple(state, para,
                                                findDerivations, emptyDepth)
         # print(state.wf, state.curPos)
@@ -327,7 +326,7 @@ class Parser:
                             len(infl.flexParts[0]) > 0 and\
                             infl.flexParts[0][0].glossType != paradigm.GLOSS_STARTWITHSELF:
                 continue
-            elif self.infl_count(state, infl) >= grammar.Grammar.RECURS_LIMIT:
+            elif self.infl_count(state, infl) >= self.g.RECURS_LIMIT:
                 continue
             elif (len(infl.flexParts) <= 0 or len(infl.flexParts[0]) <= 0 or
                   (len(infl.flexParts[0]) == 1 and len(infl.flexParts[0][0].flex) <= 0)) and\
@@ -360,11 +359,11 @@ class Parser:
             emptyDepth = self.empty_depth(state)
         if emptyDepth > self.MAX_EMPTY_INFLEXIONS:
             return []
-        if (len(state.derivsUsed) >= grammar.Grammar.MAX_DERIVATIONS and
+        if (len(state.derivsUsed) >= self.g.MAX_DERIVATIONS and
             '#deriv' in paraName):
             return []
         try:
-            para = grammar.Grammar.paradigms[paraName]
+            para = self.g.paradigms[paraName]
         except KeyError:
             self.raise_error('Wrong paradigm name: ' + paraName)
             return []
@@ -413,7 +412,8 @@ class Parser:
         for iLevel in range(1, len(state.inflLevels)):
             curLevel = state.inflLevels[iLevel]
             paradigm.Paradigm.join_inflexions(infl, copy.deepcopy(curLevel['curInfl']),
-                                              curLevel['paraLink'])
+                                              curLevel['paraLink'],
+                                              partialCompile=self.g.PARTIAL_COMPILE)
 
         if infl is None:
             return None
@@ -616,7 +616,7 @@ class Parser:
         specified by that argument (proclitics or enclitics).
         """
         hostsAndClitics = [(None, word)]
-        for cl in grammar.Grammar.clitics:
+        for cl in self.g.clitics:
             if (cl.side == clitic.SIDE_ENCLITIC and
                     cliticSide != clitic.SIDE_PROCLITIC and
                     word.endswith(cl.stem) and
@@ -683,23 +683,22 @@ class Parser:
         for ana in analyses:
             if self.is_bad_analysis(ana):
                 continue
-            enhancedAnas = Parser.apply_lex_rules(ana)
+            enhancedAnas = self.apply_lex_rules(ana)
             if len(enhancedAnas) <= 0:
                 analysesSet.add(ana)
             else:
                 analysesSet |= enhancedAnas
         return analysesSet
 
-    @staticmethod
-    def apply_lex_rules(ana):
+    def apply_lex_rules(self, ana):
         possibleEnhancements = set()
-        if ana.lemma in grammar.Grammar.lexRulesByLemma:
-            for rule in grammar.Grammar.lexRulesByLemma[ana.lemma]:
+        if ana.lemma in self.g.lexRulesByLemma:
+            for rule in self.g.lexRulesByLemma[ana.lemma]:
                 newAna = rule.apply(ana)
                 if newAna is not None:
                     possibleEnhancements.add(newAna)
-        if ana.stem in grammar.Grammar.lexRulesByStem:
-            for rule in grammar.Grammar.lexRulesByStem[ana.stem]:
+        if ana.stem in self.g.lexRulesByStem:
+            for rule in self.g.lexRulesByStem[ana.stem]:
                 newAna = rule.apply(ana)
                 if newAna is not None:
                     possibleEnhancements.add(newAna)

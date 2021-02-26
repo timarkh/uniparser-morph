@@ -1,5 +1,4 @@
 import re
-import grammar
 
 
 class MorphFSTState:
@@ -70,21 +69,21 @@ class MorphFST:
     rxMultipleDots = re.compile('(?:\\[\\.\\]|\\.){2,}')
     rxAfxLeadingDot = re.compile('^(?:<[0-9,]*>)?\\.(?![0.\\[|¦])')
 
-    def __init__(self, verbose=0, det=False):
+    def __init__(self, g, verbose=0, det=False):
+        self.g = g
         self.transitions = {}
         self.startState = MorphFSTState()
         self.verbose = verbose
         self.det = det
 
-    @staticmethod
-    def prepare_stem(stem):
+    def prepare_stem(self, stem):
         """
         Remove all unnecessary information from the stem
         before adding it to the FST.
         """
         stem = MorphFST.rxEmptyStemChars.sub('', stem)
         stem = MorphFST.rxMultipleDots.sub('.', stem)
-        if len(grammar.Grammar.derivations) > 0:
+        if len(self.g.derivations) > 0:
             if not stem.startswith('.'):
                 stem = '.' + stem
             if not stem.endswith('.'):

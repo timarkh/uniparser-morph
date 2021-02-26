@@ -1,4 +1,3 @@
-import grammar
 import reduplication
 import wordform
 
@@ -30,10 +29,10 @@ def check_for_regex(wf, rxTest, errorHandler=None):
 
 
 class Clitic:
-    obligFields = {'lex'}
-    propertyFields = {'lex', 'stem', 'paradigm', 'gramm', 'gloss', 'lexref'}
-        
-    def __init__(self, dictDescr, errorHandler=None):
+    def __init__(self, g, dictDescr, errorHandler=None):
+        self.obligFields = {'lex'}
+        self.propertyFields = {'lex', 'stem', 'paradigm', 'gramm', 'gloss', 'lexref'}
+        self.g = g
         self.lemma = ''
         self.lexref = ''
         self.stem = None
@@ -48,14 +47,14 @@ class Clitic:
                          'gramm': self.add_gramm, 'gloss': self.add_gloss,
                          'type': self.add_side}
         if errorHandler is None:
-            errorHandler = grammar.Grammar.errorHandler
+            errorHandler = self.g.errorHandler
         self.errorHandler = errorHandler
         try:
             keys = set(obj['name'] for obj in dictDescr['content'])
         except KeyError:
             self.raise_error('No content in a clitic: ', dictDescr)
             return
-        if len(Clitic.obligFields & keys) < len(Clitic.obligFields):
+        if len(self.obligFields & keys) < len(self.obligFields):
             self.raise_error('No obligatory fields in a clitic: ',
                              dictDescr['content'])
             return
@@ -183,7 +182,7 @@ class Clitic:
                                if t[0] == 'conversion-link'}
         for scName in stemConversionNames:
             try:
-                grammar.Grammar.stemConversions[scName].convert(stems)
+                self.g.stemConversions[scName].convert(stems)
             except KeyError:
                 self.raise_error('No stem conversion named ' + scName)
 

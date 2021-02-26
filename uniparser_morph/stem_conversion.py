@@ -1,5 +1,5 @@
-import re
 from reduplication import Replacement
+
 
 class StemConversion:
     def __init__(self, dictDescr, errorHandler=None):
@@ -7,44 +7,44 @@ class StemConversion:
                                   # [replacementObject1, ...]}}
         self.errorHandler = errorHandler
         try:
-            self.name = dictDescr[u'value']
-            replacements = dictDescr[u'content']
+            self.name = dictDescr['value']
+            replacements = dictDescr['content']
         except KeyError:
-            self.raise_error(u'Wrong stem conversion: ', dictDescr)
+            self.raise_error('Wrong stem conversion: ', dictDescr)
             return
         stemBase = -1
         dictsNewStem = []
         for obj in replacements:
-            if obj[u'name'] == u'stem-base':
+            if obj['name'] == 'stem-base':
                 try:
-                    stemBase = int(obj[u'value'])
+                    stemBase = int(obj['value'])
                 except:
-                    self.raise_error(u'Wrong base stem number: ', dictDescr)
+                    self.raise_error('Wrong base stem number: ', dictDescr)
                     return
-            elif obj[u'name'] == u'new-stem' and u'content' in obj:
+            elif obj['name'] == 'new-stem' and 'content' in obj:
                 try:
-                    newStem = int(obj[u'value'])
+                    newStem = int(obj['value'])
                 except:
-                    self.raise_error(u'Wrong new stem number: ', dictDescr)
+                    self.raise_error('Wrong new stem number: ', dictDescr)
                     return
-                dictsNewStem.append((obj[u'content'], newStem))
+                dictsNewStem.append((obj['content'], newStem))
         for obj, newStem in dictsNewStem:
             self.add_conversion(obj, stemBase, newStem)
 
     def raise_error(self, message, data=None):
-        if self.errorHandler != None:
+        if self.errorHandler is not None:
             self.errorHandler.RaiseError(message, data)
 
     def add_conversion(self, arrDictDescr, stemBase, newStem):
         for repl in arrDictDescr:
             try:
-                if repl[u'name'] != u'replace':
-                    self.raise_error(u'Incorrect field in a stem conversion description: ',\
+                if repl['name'] != 'replace':
+                    self.raise_error('Incorrect field in a stem conversion description: ',
                                      repl)
                     continue
                 self.add_operation(stemBase, newStem, Replacement(repl))
             except KeyError:
-                self.raise_error(u'Error in a stem conversion description: ',\
+                self.raise_error('Error in a stem conversion description: ',
                                  repl)
     
     def add_operation(self, stemBase, newStem, repl):
@@ -73,7 +73,7 @@ class StemConversion:
                 # explicitly written stems have higher priority and shouldn't
                 # be owerwritten
                 if len(stems[newStem]) <= 0:
-                    stems[newStem] = self.convert_one(stems[stemBase],\
+                    stems[newStem] = self.convert_one(stems[stemBase],
                                                  self.stemConversions[stemBase][newStem])
 ##                    print stems[newStem]
 
@@ -84,4 +84,3 @@ class StemConversion:
                 stem = rule.convert(stem)
             newStemVars.append(stem)
         return tuple(newStemVars)
-    

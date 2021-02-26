@@ -1,5 +1,4 @@
-﻿import grammar
-import lexeme
+﻿import lexeme
 import paradigm
 import re
 import copy
@@ -107,13 +106,13 @@ class Wordform:
     propertyFields = {'wf', 'gloss', 'lemma', 'gramm', 'wfGlossed'}
     printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'lex2', 'gramm2',
                             'trans_ru2', 'trans_en2', 'trans_de2', 'root'}
-    errorHandler = None
     verbosity = 0
     
-    def __init__(self, sublex=None, flex=None, errorHandler=None):
+    def __init__(self, g, sublex=None, flex=None, errorHandler=None):
+        self.g = g
         if self.errorHandler is None:
             if errorHandler is None:
-                self.errorHandler = grammar.Grammar.errorHandler
+                self.errorHandler = self.g.errorHandler
             else:
                 self.errorHandler = errorHandler
         self.wf = None

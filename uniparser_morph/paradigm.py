@@ -1,5 +1,4 @@
-﻿import grammar
-from reduplication import RegexTest, Reduplication, REDUPL_SIDE_RIGHT, REDUPL_SIDE_LEFT
+﻿from reduplication import RegexTest, Reduplication, REDUPL_SIDE_RIGHT, REDUPL_SIDE_LEFT
 import lexeme
 import re
 import copy
@@ -86,7 +85,8 @@ class Inflexion:
     rxCleanGloss = re.compile('[\\[\\]!~]+')
     rxMeta = re.compile('[<>\\[\\]().0-9~!|,]')
     
-    def __init__(self, dictDescr, errorHandler=None):
+    def __init__(self, g, dictDescr, errorHandler=None):
+        self.g = g
         self.flex = ''
         self.stemNum = None     # what stems it can attach to
         self.stemNumOut = None  # what stems the subsequent inflexions
@@ -202,7 +202,7 @@ class Inflexion:
             self.raise_error('Wrong lemma in ' + self.flex + ': ', newLemma)
             return
         dictDescr = {'name': 'flex', 'value': newLemma, 'content': []}
-        self.lemmaChanger = Inflexion(dictDescr, self.errorHandler)
+        self.lemmaChanger = Inflexion(self.g, dictDescr, self.errorHandler)
         self.lemmaChanger.startWithSelf = True
 
     def remove_stem_number(self):
@@ -400,8 +400,15 @@ class Inflexion:
                                             for fp in self.flexParts[0]):
             return []
         reduplParts = []
-        pTmp = Paradigm({'name': 'paradigm', 'value': 'tmp',
-                         'content': None}, self.errorHandler)
+        pTmp = Paradigm(
+            self.g,
+            {
+                'name': 'paradigm',
+                'value': 'tmp',
+                'content': None
+            },
+            self.errorHandler
+        )
         subLexStem = sublex.stem
         if self.startWithSelf and not subLexStem.startswith('.'):
             subLexStem = '.' + subLexStem
@@ -602,7 +609,8 @@ class Paradigm:
     rxEmptyFlex = re.compile('^[.<>\\[\\]0-9,]*$')
     errorHandler = None
     
-    def __init__(self, dictDescr, errorHandler=None):
+    def __init__(self, g, dictDescr, errorHandler=None):
+        self.g = g
         if self.errorHandler is None:
             self.errorHandler = errorHandler
         self.name = dictDescr['value']
@@ -670,7 +678,7 @@ class Paradigm:
                 arrContent.append({'name': 'gramm', 'value': gramm})
                 dictDescr = {'name': 'flex', 'value': stemVar,
                              'content': arrContent}
-                flex = Inflexion(dictDescr, self.errorHandler)
+                flex = Inflexion(self.g, dictDescr, self.errorHandler)
                 flex.passStemNum = False
                 if len(stems) > 1:
                     flex.stemNumOut = {iStem}
@@ -687,7 +695,7 @@ class Paradigm:
     def init_paradigm(self, data):
         for obj in self.separate_variants(data):
             if obj['name'] == 'flex':
-                newInflexion = Inflexion(obj, self.errorHandler)
+                newInflexion = Inflexion(self.g, obj, self.errorHandler)
                 if len(newInflexion.reduplications) > 0:
                     self.containsReduplication = True
                 self.flex.append(newInflexion)
@@ -753,18 +761,17 @@ class Paradigm:
         Check if the paradigm compilation loop should be continued,
         taking all possible constraints into consideration.
         """
-        g = grammar.Grammar
         timePassed = time.time() - startTime
-        if g.PARTIAL_COMPILE and timePassed > g.MAX_COMPILE_TIME:
+        if self.g.PARTIAL_COMPILE and timePassed > self.g.MAX_COMPILE_TIME:
             return False
-        if depth > g.TOTAL_DERIV_LIMIT:
+        if depth > self.g.TOTAL_DERIV_LIMIT:
             return False
         for f in self.flex:
             flen = f.get_length()
             if ((f.position != POS_FINAL and
-                 f.join_depth < g.DERIV_LIMIT and
-                 flen < g.FLEX_LENGTH_LIMIT) and
-                 (not g.PARTIAL_COMPILE or flen < g.MIN_FLEX_LENGTH)):
+                 f.join_depth < self.g.DERIV_LIMIT and
+                 flen < self.g.FLEX_LENGTH_LIMIT) and
+                 (not self.g.PARTIAL_COMPILE or flen < self.g.MIN_FLEX_LENGTH)):
                 return True
         return False
 
@@ -779,7 +786,6 @@ class Paradigm:
         at most grammar.Grammar.DERIV_LIMIT times.
         """
         depth = 0
-        g = grammar.Grammar
         startTime = time.time()
         for f in self.flex:
             f.join_depth = 1
@@ -803,14 +809,14 @@ class Paradigm:
                     if len(f.subsequent) <= 0 or f.position == POS_FINAL:
                         continue
                 fLen = f.get_length()
-                if (g.PARTIAL_COMPILE and
-                        (fLen >= g.MIN_FLEX_LENGTH or
-                         f.join_depth >= g.DERIV_LIMIT or
-                         time.time() - startTime > g.MAX_COMPILE_TIME)):
+                if (self.g.PARTIAL_COMPILE and
+                        (fLen >= self.g.MIN_FLEX_LENGTH or
+                         f.join_depth >= self.g.DERIV_LIMIT or
+                         time.time() - startTime > self.g.MAX_COMPILE_TIME)):
                     newFlex.append(copy.deepcopy(f))
                 else:
-                    if f.join_depth >= grammar.Grammar.DERIV_LIMIT or\
-                       f.get_length() > grammar.Grammar.FLEX_LENGTH_LIMIT:
+                    if f.join_depth >= self.g.DERIV_LIMIT or\
+                       f.get_length() > self.g.FLEX_LENGTH_LIMIT:
                         # just dismiss it and hope it does not occur frequently in the texts
                         print('DISMISS', f)
                         continue
@@ -830,7 +836,7 @@ class Paradigm:
         """
         for iFlex in range(len(self.flex))[::-1]:
             f = self.flex[iFlex]
-            if (not grammar.Grammar.PARTIAL_COMPILE and
+            if (not self.g.PARTIAL_COMPILE and
                     (len(f.subsequent) > 0 and f.position != POS_FINAL and
                      f.position != POS_BOTH)):
                 print('REMOVE', f)
@@ -844,8 +850,8 @@ class Paradigm:
         of the inflexion flexL. Return a list of resulting
         inflexions.
         """
-        if grammar.Grammar.PARTIAL_COMPILE\
-                and flexL.get_length() >= grammar.Grammar.MIN_FLEX_LENGTH:
+        if self.g.PARTIAL_COMPILE\
+                and flexL.get_length() >= self.g.MIN_FLEX_LENGTH:
             return [flexL]
         extensions = []
         for paradigmLink in flexL.subsequent:
@@ -856,9 +862,9 @@ class Paradigm:
                 dictRecurs[shortName] += 1
             except KeyError:
                 dictRecurs[shortName] = 1
-            if dictRecurs[shortName] > grammar.Grammar.RECURS_LIMIT:
+            if dictRecurs[shortName] > self.g.RECURS_LIMIT:
                 continue
-            for flexR in grammar.Grammar.paradigms[paradigmLink.name].flex:
+            for flexR in self.g.paradigms[paradigmLink.name].flex:
                 flexExt = self.join_inflexions(copy.deepcopy(flexL),
                                                copy.deepcopy(flexR),
                                                copy.deepcopy(paradigmLink))
@@ -867,16 +873,16 @@ class Paradigm:
                     # the same dictRecurs is used for all resulting inflexions
                     # of this step
                     extensions.append(flexExt)
-                    if grammar.Grammar.paradigms[paradigmLink.name].containsReduplications:
+                    if self.g.paradigms[paradigmLink.name].containsReduplications:
                         self.containsReduplications = True
         return extensions
 
     @classmethod
-    def join_inflexions(cls, flexL, flexR, paradigmLink):
+    def join_inflexions(cls, flexL, flexR, paradigmLink, partialCompile=True):
         # print(flexL.flex, flexR.flex)
         if not cls.stem_numbers_agree(flexL, flexR):
             return None
-        if not cls.join_regexes(flexL, flexR):
+        if not cls.join_regexes(flexL, flexR, partialCompile=partialCompile):
             return None
 
         # Manage links to the subsequent paradigms:
@@ -950,7 +956,7 @@ class Paradigm:
         return False
 
     @classmethod
-    def join_regexes(cls, flexL, flexR):
+    def join_regexes(cls, flexL, flexR, partialCompile=True):
         """
         Check if the inflexions' regexes agree.
         If they agree, add flexR's regexes to flexL and return True,
@@ -994,7 +1000,7 @@ class Paradigm:
         for rxPrev in flexR.regexTests:
             if rxPrev.field == 'prev':
                 if bEmptyL:
-                    if grammar.Grammar.PARTIAL_COMPILE:
+                    if partialCompile:
                         tests2add.append(copy.deepcopy(rxPrev))
                     elif all(rt.field != 'stem' or rt.sTest != rxPrev.sTest
                              for rt in flexL.regexTests):
@@ -1131,8 +1137,8 @@ class Paradigm:
         if needed. Return the name of the paradigm.
         """
         if not self.containsReduplications:
-            if self.name not in grammar.Grammar.paradigms:
-                grammar.Grammar.paradigms[self.name] = copy.deepcopy(self)
+            if self.name not in self.g.paradigms:
+                self.g.paradigms[self.name] = copy.deepcopy(self)
             return self.name
         newPara = copy.deepcopy(self)
         reduplParts = []
@@ -1141,8 +1147,8 @@ class Paradigm:
         if len(reduplParts) > 0:
             newPara.name += '~' + '~'.join(reduplParts)
         newPara.containsReduplications = False
-        if newPara.name not in grammar.Grammar.paradigms:
-            grammar.Grammar.paradigms[newPara.name] = newPara
+        if newPara.name not in self.g.paradigms:
+            self.g.paradigms[newPara.name] = newPara
         return newPara.name
 
     def fork_regex(self, sublex):
@@ -1153,13 +1159,13 @@ class Paradigm:
         if self.regexTests is None:
             self.build_regex_tests()
         if len(self.regexTests) == 0:
-            if self.name not in grammar.Grammar.paradigms:
-                grammar.Grammar.paradigms[self.name] = copy.deepcopy(self)
+            if self.name not in self.g.paradigms:
+                self.g.paradigms[self.name] = copy.deepcopy(self)
             return self.name
 
         testResult = self.perform_regex_tests(sublex)
         newParaName = self.name + '=' + str(testResult)
-        if newParaName in grammar.Grammar.paradigms:
+        if newParaName in self.g.paradigms:
             return newParaName
         
         # If there is no such paradigm, make it:
@@ -1179,7 +1185,7 @@ class Paradigm:
         newPara.regexTests = {}
         for flex in newPara.flex:
             flex.regexTests = []
-        grammar.Grammar.paradigms[newParaName] = newPara
+        self.g.paradigms[newParaName] = newPara
         return newParaName
 
     def perform_regex_tests(self, sublex):
