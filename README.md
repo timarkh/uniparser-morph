@@ -41,5 +41,7 @@ analyses = a.analyze_words(['Морфологияез', [['А'], ['Мон', 'т�
 
 If you need to parse a frequency list, use ``analyze_wordlist()`` instead.
 
+See [the documentation](https://uniparser-morph.readthedocs.io/en/latest/) for the full list of options.
+
 ## Format
-This section is under construction.
+If you want to create a ``uniparser-morph`` analyzer for your language, you will have to write a set of rules that describe the vocabulary and the morphology of your language in ``uniparser-morph`` format. For the description of the format, [refer to documentation](https://uniparser-morph.readthedocs.io/en/latest/) .
