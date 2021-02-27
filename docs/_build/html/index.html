@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uniparser morphology &#8212; uniparser-morph 2.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Short usage guide" href="usage.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="uniparser-morphology">
+<h1>Uniparser morphology<a class="headerlink" href="#uniparser-morphology" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> is yet another rule-based morphological analysis tool. No built-in rules are provided; you will have to write some if you want to parse texts in your language. Uniparser-morph was developed primarily for under-resourced languages, which don’t have enough data for training statistical parsers. Here’s how it’s different from other similar tools:</p>
+<ul class="simple">
+<li><p>It is designed to be usable by theoretical linguists with no prior knowledge of NLP (and has been successfully used by them). So it’s not just another way of defining an FST; the way you describe lexemes and morphology resembles what you do in a traditional theoretical description, at least in part.</p></li>
+<li><p>It was developed with a large variety of linguistic phenomena in mind and is easily applicable to most languages – not just the Standard Average European.</p></li>
+<li><p>Apart from POS-tagging and full morphological tagging, there is a glossing option (words can be split into morphemes).</p></li>
+<li><p>Lexemes can carry any number of attributes that have to end up in the annotation, e.g. translations into the metalanguage.</p></li>
+<li><p>Ambiguity is allowed: all words you analyze will receive all theoretically possible analyses regardless of the context. (You can then use e.g. <a class="reference external" href="https://visl.sdu.dk/constraint_grammar.html">CG</a> for rule-based disambiguation.)</p></li>
+<li><p>While, in computational terms, the language described by <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> rules is certainly regular, the description is actually NOT entirely converted into an FST. Therefore, it’s not nearly as fast as FST-based analyzers. The speed varies depending on the language structure and hardware characteristics, but you can hardly expect to parse more than 20,000 words per second. For heavily polysynthetic languages that figure can go as low as 200 words per second. So it’s not really designed for industrial use.</p></li>
+</ul>
+<p>The primary usage scenario I was thinking about is the following:</p>
+<ul class="simple">
+<li><p>You have a corpus of texts where you want to add morphological annotation (this includes POS-tagging).</p></li>
+<li><p>You manually prepare a grammar for the language in <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> format (probably making use of existing digital dictionaries of the language).</p></li>
+<li><p>You compile a list of unique words in your corpus and parse it.</p></li>
+<li><p>Then you annotate your texts based on this wordlist with any software you want.</p></li>
+</ul>
+<p>Of course, you can do other things with <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code>, e.g. make it a part of a more complex NLP pipeline; just make sure low speed is not an issue in your case.</p>
+<p>If you want to write rules for your language, see <a class="reference internal" href="format.html"><span class="doc">Format overview</span></a> for <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> format description. If you already have a grammar and would like to know how to analyze texts with it, see <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a>.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Short usage guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">uniparser-morph</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Short usage guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="usage.html" title="next chapter">Short usage guide</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Timofey Arkhangelskiy.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
