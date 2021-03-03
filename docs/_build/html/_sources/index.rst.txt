@@ -53,4 +53,4 @@ I developed the format and the first version of ``uniparser-morph`` in 2011-2012
 
 .. _its summary in Russian: https://dlib.rsl.ru/viewer/01005049190
 .. _web-corpora.net: http://web-corpora.net/?l=en
-.. _Corpora of the Volga-Kama Uralic languages: http://volgakama.web-corpora.net/
+.. _Corpora of the Volga-Kama Uralic languages: http://volgakama.web-corpora.net/index_en.html

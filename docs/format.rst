@@ -50,5 +50,13 @@ Here is a more complex example from Turoyo (Afro-Asiatic family). The three-cons
 | ``g`` | ``.`` | ``o`` | ``.`` | ``a`` | ``.`` | ``le`` |
 +-------+-------+-------+-------+-------+-------+--------+
 
+When the same stem is joined with the combination of affixes ``.a..atli`` (present, 2sg subject, 1sg object) to form ``maydatli``, two of the stem's dots match empty regular sequences in the affix:
+
++-------+-------+-------+-------+-------+-------+----------+
+| ``.`` | ``m`` | ``.`` | ``y`` | ``.`` | ``d`` | ``.``    |
++-------+-------+-------+-------+-------+-------+----------+
+|       | ``.`` | ``a`` | ``.`` |       | ``.`` | ``atli`` |
++-------+-------+-------+-------+-------+-------+----------+
+
 
 .. _FieldWorks: https://software.sil.org/fieldworks/
