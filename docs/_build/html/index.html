@@ -14,7 +14,7 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Short usage guide" href="usage.html" />
+    <link rel="next" title="Usage guide" href="usage.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -33,9 +33,11 @@
             
   <div class="section" id="uniparser-morphology">
 <h1>Uniparser morphology<a class="headerlink" href="#uniparser-morphology" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> is yet another rule-based morphological analysis tool. No built-in rules are provided; you will have to write some if you want to parse texts in your language. Uniparser-morph was developed primarily for under-resourced languages, which don’t have enough data for training statistical parsers. Here’s how it’s different from other similar tools:</p>
 <ul class="simple">
-<li><p>It is designed to be usable by theoretical linguists with no prior knowledge of NLP (and has been successfully used by them). So it’s not just another way of defining an FST; the way you describe lexemes and morphology resembles what you do in a traditional theoretical description, at least in part.</p></li>
+<li><p>It is designed to be usable by theoretical linguists with no prior knowledge of NLP (and has been successfully used by them with minimal guidance). So it’s not just another way of defining an FST; the way you describe lexemes and morphology resembles what you do in a traditional theoretical description, at least in part.</p></li>
 <li><p>It was developed with a large variety of linguistic phenomena in mind and is easily applicable to most languages – not just the Standard Average European.</p></li>
 <li><p>Apart from POS-tagging and full morphological tagging, there is a glossing option (words can be split into morphemes).</p></li>
 <li><p>Lexemes can carry any number of attributes that have to end up in the annotation, e.g. translations into the metalanguage.</p></li>
@@ -50,17 +52,34 @@
 <li><p>Then you annotate your texts based on this wordlist with any software you want.</p></li>
 </ul>
 <p>Of course, you can do other things with <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code>, e.g. make it a part of a more complex NLP pipeline; just make sure low speed is not an issue in your case.</p>
-<p>If you want to write rules for your language, see <a class="reference internal" href="format.html"><span class="doc">Format overview</span></a> for <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> format description. If you already have a grammar and would like to know how to analyze texts with it, see <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a>.</p>
+<p>If you want to write rules for your language, see <a class="reference internal" href="format.html"><span class="doc">Format overview</span></a> for <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> format description, or look at the <a class="reference internal" href="examples.html"><span class="doc">List of examples</span></a>. If you already have a grammar and would like to know how to analyze texts with it, see <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a>.</p>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Short usage guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#basic-usage">Basic usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#settings">Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="format.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="format.html#morphemes">Morphemes</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
 </ul>
+</div>
+</div>
+<div class="section" id="history">
+<h2>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h2>
+<p>I developed the format and the first version of <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> in 2011-2012 as part of my PhD thesis (here is <a class="reference external" href="https://dlib.rsl.ru/viewer/01005049190">its summary in Russian</a>). I completely rewrote it in Python in 2015-2016, adding only slight changes afterwards. I and other people have used <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> to annotate a couple dozen corpora, e.g. some corpora at <a class="reference external" href="http://web-corpora.net/?l=en">web-corpora.net</a> and <a class="reference external" href="http://volgakama.web-corpora.net/">Corpora of the Volga-Kama Uralic languages</a>.</p>
 </div>
 </div>
 
@@ -83,19 +102,20 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Short usage guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="usage.html" title="next chapter">Short usage guide</a></li>
+      <li>Next: <a href="usage.html" title="next chapter">Usage guide</a></li>
   </ul></li>
 </ul>
 </div>

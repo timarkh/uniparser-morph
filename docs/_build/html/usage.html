@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Short usage guide &#8212; uniparser-morph 2.1.0 documentation</title>
+    <title>Usage guide &#8212; uniparser-morph 2.1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -32,35 +32,82 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="short-usage-guide">
-<h1>Short usage guide<a class="headerlink" href="#short-usage-guide" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="usage-guide">
+<h1>Usage guide<a class="headerlink" href="#usage-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-usage">
+<h2>Basic usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
 <p>If you already have prepared the grammar rules in the right format, you have to put them in the same folder where you run your script. (If not, see <a class="reference internal" href="format.html"><span class="doc">the format description</span></a>.)</p>
-<p>Import the <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> class from the package, make an instance and load your grammar files:</p>
+<p>Import the <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> class from the package, create an instance and load your grammar files:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniparser_morph</span> <span class="kn">import</span> <span class="n">Analyzer</span>
 <span class="n">a</span> <span class="o">=</span> <span class="n">Analyzer</span><span class="p">()</span>
 <span class="n">a</span><span class="o">.</span><span class="n">load_grammar</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Now you can use one of several functions to analyze text in your language. Beware that the analyzer performs actual initialization when first asked to analyze something, so expect some delay after the first function call you make. Usually it takes several seconds to initialize things, but that depends on the language.</p>
+<p>Now you can use one of several functions to analyze text in your language. Beware that despite having read the grammar files, the analyzer performs actual initialization when first asked to analyze something. Therefore, expect some delay after the first function call you make. Usually it takes several seconds to initialize things, but that depends on the language.</p>
+<p>You can change the default settings by assigning non-default values to the properties of your <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> object, see <a class="reference internal" href="#settings"><span class="std std-ref">Settings</span></a>.</p>
+<div class="section" id="analyze-sentences">
+<h3>Analyze sentences<a class="headerlink" href="#analyze-sentences" title="Permalink to this headline">¶</a></h3>
 <p>If you want to analyze words or sentences on the fly, call <code class="docutils literal notranslate"><span class="pre">analyze_words()</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">(</span><span class="s1">&#39;Морфологияез&#39;</span><span class="p">)</span>
 <span class="c1"># If you pass a single string, you will get a list of Wordform objects</span>
+<span class="c1"># The analysis attributes are stored in its properties</span>
+<span class="c1"># as string values, e.g.:</span>
+<span class="k">for</span> <span class="n">ana</span> <span class="ow">in</span> <span class="n">analyses</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">ana</span><span class="o">.</span><span class="n">wf</span><span class="p">,</span> <span class="n">ana</span><span class="o">.</span><span class="n">lemma</span><span class="p">,</span> <span class="n">ana</span><span class="o">.</span><span class="n">gramm</span><span class="p">,</span> <span class="n">ana</span><span class="o">.</span><span class="n">gloss</span><span class="p">)</span>
 
-<span class="c1"># You can also pass lists (even nested lists) and specify output format (&#39;xml&#39; or &#39;json&#39;)</span>
+<span class="c1"># You can also pass lists (even nested lists) and specify</span>
+<span class="c1"># output format (&#39;xml&#39; or &#39;json&#39;)</span>
 <span class="c1"># If you pass a list, you will get a list of analyses with the same structure</span>
 
 <span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([[</span><span class="s1">&#39;А&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;тонэ&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]],</span>
                            <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;xml&#39;</span><span class="p">)</span>
-<span class="c1"># format=&#39;xml&#39; means you will get an XML string like &lt;w&gt;&lt;ana lex=&quot;...&quot; gr=&quot;...&quot; ...&gt;&lt;/ana&gt;...&lt;/w&gt;</span>
+<span class="c1"># format=&#39;xml&#39; means you will get an XML string</span>
+<span class="c1"># like &lt;w&gt;&lt;ana lex=&quot;...&quot; gr=&quot;...&quot; ...&gt;&lt;/ana&gt;...&lt;/w&gt;</span>
 <span class="c1"># for each token instead of a list of Wordform objects</span>
 
 <span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([</span><span class="s1">&#39;Морфологияез&#39;</span><span class="p">,</span> <span class="p">[[</span><span class="s1">&#39;А&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;тонэ&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]]],</span>
                            <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">)</span>
-<span class="c1"># format=&#39;json&#39; means you will get a list of dictionaries such as {&#39;lemma&#39;: ..., &#39;gr&#39;: ..., ...}</span>
+<span class="c1"># format=&#39;json&#39; means you will get a list of dictionaries</span>
+<span class="c1"># such as {&#39;lemma&#39;: ..., &#39;gramm&#39;: [...], ...}</span>
 <span class="c1"># for each token instead of a list of Wordform objects</span>
 </pre></div>
 </div>
-<p>You can change the default settings by assigning non-default values to the properties of your <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> object.</p>
+</div>
+<div class="section" id="analyze-frequency-lists">
+<h3>Analyze frequency lists<a class="headerlink" href="#analyze-frequency-lists" title="Permalink to this headline">¶</a></h3>
+<p>If you want to annotate a corpus before you use it, the best way of doing it is annotating the frequency list, where each word occurs only once. This is much faster than annotating the texts directly. However, you will have to compile a frequency list and then insert the analyses into the corpus on your own.</p>
+<p>A frequency list has to be a CSV file (with any separator; default is tab) with two columns. The first column is the word to be analyzed (type), the second is its frequency. Frequencies are only needed to count the proportion of analyzed tokens at the end; if you do not need this, you can just assign the frequency of 1 to each word. The default name of the frequency list is <code class="docutils literal notranslate"><span class="pre">wordlist.csv</span></code>; you have to put it to the current working directory. The rest is simple:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="o">.</span><span class="n">analyze_wordlist</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>When the analysis is over (which may take a while), two files will be generated in the current directory, one with the analyses, the other with the list of unanalyzed words in the same order as in the frequency list.</p>
+</div>
+</div>
+<div class="section" id="settings">
+<span id="id1"></span><h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h2>
+<p>If you want to use some non-default parameter values, you can assign a value to one of the properties <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> instance or, in some cases, pass a named argument to a function yuo call. These are the most important properties:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lexFile</span></code>: name of the <a class="reference internal" href="lexemes.html"><span class="doc">lexicon file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">lexemes.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paradigmFile</span></code>: name of the <a class="reference internal" href="paradigms.html"><span class="doc">paradigms file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">paradigms.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delAnaFile</span></code>: name of the <a class="reference internal" href="bad_analyses.html"><span class="doc">bad analyses file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">bad_analyses.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lexRulesFile</span></code>: name of the <a class="reference internal" href="lex_rules.html"><span class="doc">lexical rules file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">lex_rules.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">derivFile</span></code>: name of the <a class="reference internal" href="derivations.html"><span class="doc">derivations file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">derivations.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cliticFile</span></code>: name of the <a class="reference internal" href="clitics.html"><span class="doc">clitics file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">clitics.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conversionFile</span></code>: name of the <a class="reference internal" href="stem_conversions.html"><span class="doc">stem conversion file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">stem_conversions.txt</span></code>.</p></li>
+</ul>
+<p>The parameters above can be assigned strings with file names or folder names. In the latter case, all <code class="docutils literal notranslate"><span class="pre">.txt</span></code> files in the folder are concatenated to form the list of lexemes, paradigms, etc.</p>
+<p>The next parameters are used when <code class="docutils literal notranslate"><span class="pre">analyze_wordlist()</span></code> is called and can also be passed to it as named arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">freqListFile</span></code>: name of the frequency list file. Defaults to <code class="docutils literal notranslate"><span class="pre">wordlist.csv</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">freqListSeparator</span></code>: string used to separate columns (token and frequency) in the frequency list. Defaults to <code class="docutils literal notranslate"><span class="pre">\t</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parsedFile</span></code>: name of the output file with analyzed words. Defaults to <code class="docutils literal notranslate"><span class="pre">analyzed.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unparsedFile</span></code>: name of the output file with unanalyzed words. Defaults to <code class="docutils literal notranslate"><span class="pre">unanalyzed.txt</span></code>.</p></li>
+</ul>
+<p>Finally, there are parameters that influence what is done during parsing:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">glossing</span></code>: Boolean value that determines whether the analyses should contain attributes for glosses and morpheme breaks. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+</ul>
+</div>
 </div>
 
 
@@ -82,12 +129,17 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Short usage guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#settings">Settings</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
 </ul>
 
 <div class="relations">

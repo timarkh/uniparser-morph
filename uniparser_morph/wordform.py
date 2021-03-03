@@ -121,10 +121,10 @@ class Wordform:
         r = {
             'wf': self.wf,
             'lemma': self.lemma,
-            'gr': [tag for tag in self.gramm.split(',') if len(tag) > 0]
+            'gramm': [tag for tag in self.gramm.split(',') if len(tag) > 0]
         }
         if glossing:
-            r['parts'] = self.wfGlossed
+            r['wfGlossed'] = self.wfGlossed
             r['gloss'] = self.gloss
         for field, value in self.otherData:
             if field in Wordform.printableOtherFields:

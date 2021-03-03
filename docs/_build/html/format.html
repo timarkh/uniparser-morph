@@ -15,7 +15,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="lexemes.txt" href="lexemes.html" />
-    <link rel="prev" title="Short usage guide" href="usage.html" />
+    <link rel="prev" title="Usage guide" href="usage.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -34,6 +34,82 @@
             
   <div class="section" id="format-overview">
 <h1>Format overview<a class="headerlink" href="#format-overview" title="Permalink to this headline">¶</a></h1>
+<p>This section is under construction.</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Morphological description of a language in <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> format requires at least two files:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="lexemes.html"><span class="doc">lexemes.txt</span></a> contains the dictionary (lexemes, their POS tags, stem allomorphs etc.);</p></li>
+<li><p><a class="reference internal" href="paradigms.html"><span class="doc">paradigms.txt</span></a> contains the inflectional information (affixes and rules of their combination).</p></li>
+</ul>
+<p>There are also a number of optional files (see table of contents).</p>
+<p>When trying to parse a word, <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> basically tries to split it into a combination of a stem (taken from <code class="docutils literal notranslate"><span class="pre">lexemes.txt</span></code>) and a number of affixes (taken from <code class="docutils literal notranslate"><span class="pre">paradigms.txt</span></code>). For each split that conforms to the rules described in those files, the word gets an analysis. The attributes of the analysis (lemma, tags etc.) are taken from the stem and affixes found. If no such split is possible, the word remains unanalyzed; there is no guesser of any form.</p>
+<p>The description of the morphology in <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> is based on some principles that make it different from both a purely theoretical morphological description and some other rule-based analyzers:</p>
+<ul>
+<li><p>There is no “deep level” of any kind; all characters in stems and affixes must directly match those found in words. Sometimes this may result in a longer description, e.g. in the case of a language with an orthography that does not reflect its phonology in a straightforward way. (For example, in Cyrillics, palatalization of consonants can be marked by the choice of the neighboring vowel letter.) Still, such a description is usually more theory-neutral and easy to understand.</p></li>
+<li><p>There is no need for linguistic accuracy. For example, if, for some practical reason, it is easier to add a final consonant of some stems to the affixes, it’s okay to do so. Or you could list all combinations of affixes in a simple flat list rather than describing them as separate categories occupying different slots. You should only care for the accuracy if you want glossing.</p></li>
+<li><p>If you are familiar with <a class="reference external" href="https://software.sil.org/fieldworks/">FieldWorks</a> parsers, there are several important differences, apart from the aforementioned ones:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>There is no unified list of morphemes; stems/roots and productive affixes are described in different places.</p></li>
+<li><p>There are no “word templates”: how stems and affixes combine with each other is described by links from one lexeme or paradigm to another, and by affix- or paradigm-level constraints.</p></li>
+<li><p>Just as in corpus linguistics (meaning mainstream corpus linguistics dealing with large corpora of relatively well-described languages), the primary result of the analysis is <em>lemmatization</em> and <em>tagging</em>. It means that an analysis of a word should contain, first of all, its lemma (dictionary form) and a set of tags (part of speech and tags referring to other grammatical or lexical categories). Glossing and morpheme breaks are purely optional; you could turn them on, but you don’t have to.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="morphemes">
+<h2>Morphemes<a class="headerlink" href="#morphemes" title="Permalink to this headline">¶</a></h2>
+<p>As said before, there is no need for linguistic accuracy when describing morpheme boundaries. In what follows, a <em>morpheme</em> is understood as a string in a <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> description object that resides either in <code class="docutils literal notranslate"><span class="pre">lexemes.txt</span></code> or in <code class="docutils literal notranslate"><span class="pre">paradigms.txt</span></code>. It can be either a real morpheme (stem or affix), or a combination of several affixes, or just some string that can occur within a word.</p>
+<p>Each morpheme can contain regular characters and special sequences. Regular characters (letters, hyphens, digits etc.) will be used by the analyzer to find a match in the word. An uninterrupted sequence of regular characters constitutes one regular part of the morpheme. A regular part may be empty; there may be multiple regular parts in a morpheme. Special characters are used to define how morphemes combine with each other.</p>
+<p>The main special character, used in both the dictionary and the paradigms, is <code class="docutils literal notranslate"><span class="pre">.</span></code>. In a stem, it means “one regular part of an affix”; in an affix, it means “one regular part of a stem”. When combining a stem with an affix, the stem’s dots should match regular parts of the affix, and vice versa. All regular parts must be accounted for; matching starts from the stem. For example, the stem of an English noun “cat” could look like <code class="docutils literal notranslate"><span class="pre">cat.</span></code>, the singular morpheme would look like <code class="docutils literal notranslate"><span class="pre">.</span></code>, and the plural morpheme, like <code class="docutils literal notranslate"><span class="pre">.s</span></code>. This is how the stem is combined with the plural affix:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 56%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cat</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">s</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>When the analyzer encounters the word “cats”, it will find this split and produce an analysis, taking the lemma and the part of speech tag from the description of the lexeme with the stem <code class="docutils literal notranslate"><span class="pre">cat.</span></code>, and the <code class="docutils literal notranslate"><span class="pre">pl</span></code> tag from the description of the morpheme <code class="docutils literal notranslate"><span class="pre">.s</span></code>.</p>
+<p>Here is a more complex example from Turoyo (Afro-Asiatic family). The three-consonant stem of the verb ‘take’ is <code class="docutils literal notranslate"><span class="pre">.m.y.d.</span></code> (with dots for potential prefixes, infixes and suffixes); a combination of morphemes that expresses future tense, 3sg subject and 3sg masculine object is <code class="docutils literal notranslate"><span class="pre">g.o.a.le</span></code>. This is how they combine to produce the form <code class="docutils literal notranslate"><span class="pre">gmoyadle</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 16%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">d</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">g</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">o</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">le</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 
 
@@ -55,19 +131,24 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Short usage guide</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Format overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Format overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#morphemes">Morphemes</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="usage.html" title="previous chapter">Short usage guide</a></li>
+      <li>Previous: <a href="usage.html" title="previous chapter">Usage guide</a></li>
       <li>Next: <a href="lexemes.html" title="next chapter">lexemes.txt</a></li>
   </ul></li>
 </ul>

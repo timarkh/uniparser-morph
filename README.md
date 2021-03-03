@@ -2,7 +2,7 @@
 
 This is yet another rule-based morphological analysis tool. No built-in rules are provided; you will have to write some if you want to parse texts in your language. Uniparser-morph was developed primarily for under-resourced languages, which don't have enough data for training statistical parsers. Here's how it's different from other similar tools:
 
-* It is designed to be usable by theoretical linguists with no prior knowledge of NLP (and has been successfully used by them). So it's not just another way of defining an FST; the way you describe lexemes and morphology resembles what you do in a traditional theoretical description, at least in part.
+* It is designed to be usable by theoretical linguists with no prior knowledge of NLP (and has been successfully used by them with minimal guidance). So it's not just another way of defining an FST; the way you describe lexemes and morphology resembles what you do in a traditional theoretical description, at least in part.
 * It was developed with a large variety of linguistic phenomena in mind and is easily applicable to most languages -- not just the Standard Average European.
 * Apart from POS-tagging and full morphological tagging, there is a glossing option (words can be split into morphemes).
 * Lexemes can carry any number of attributes that have to end up in the annotation, e.g. translations into the metalanguage.

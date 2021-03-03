@@ -118,7 +118,8 @@ class Analyzer:
             if self.parsingMethod == 'fst':
                 self.m.fill_affixes()
 
-    def analyze_wordlist(self, freqListFile=None, parsedFile=None, unparsedFile=None, verbose=False):
+    def analyze_wordlist(self, freqListFile=None, parsedFile=None, unparsedFile=None,
+                         freqListSeparator=None, verbose=False):
         """
         Analyze a frequency list in a file. Write output to files with lists
         of analyzed and unanalyzed words. Use default filenames if none are
@@ -130,6 +131,8 @@ class Analyzer:
             parsedFile = self.parsedFile
         if unparsedFile is None:
             unparsedFile = self.unparsedFile
+        if freqListSeparator is None:
+            freqListSeparator = self.freqListSeparator
 
         t1 = time.time()
         self.initialize_parser(verbose=verbose)
@@ -139,7 +142,7 @@ class Analyzer:
 
         t1 = time.time()
         nTypes, parsedRate = self.m.parse_freq_list(freqListFile,
-                                                    sep=self.freqListSeparator,
+                                                    sep=freqListSeparator,
                                                     fnameParsed=parsedFile,
                                                     fnameUnparsed=unparsedFile,
                                                     glossing=self.glossing,
