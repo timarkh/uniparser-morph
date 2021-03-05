@@ -25,12 +25,17 @@ The description of the morphology in ``uniparser-morph`` is based on some princi
     * There are no "word templates": how stems and affixes combine with each other is described by links from one lexeme or paradigm to another, and by affix- or paradigm-level constraints.
     * Just as in corpus linguistics (meaning mainstream corpus linguistics dealing with large corpora of relatively well-described languages), the primary result of the analysis is *lemmatization* and *tagging*. It means that an analysis of a word should contain, first of all, its lemma (dictionary form) and a set of tags (part of speech and tags referring to other grammatical or lexical categories). Glossing and morpheme breaks are purely optional; you could turn them on, but you don't have to.
 
+.. _FieldWorks: https://software.sil.org/fieldworks/
+
 Morphemes
 ---------
 
 As said before, there is no need for linguistic accuracy when describing morpheme boundaries. In what follows, a *morpheme* is understood as a string in a ``uniparser-morph`` description object that resides either in ``lexemes.txt`` or in ``paradigms.txt``. It can be either a real morpheme (stem or affix), or a combination of several affixes, or just some string that can occur within a word.
 
 Each morpheme can contain regular characters and special sequences. Regular characters (letters, hyphens, digits etc.) will be used by the analyzer to find a match in the word. An uninterrupted sequence of regular characters constitutes one regular part of the morpheme. A regular part may be empty; there may be multiple regular parts in a morpheme. Special characters are used to define how morphemes combine with each other.
+
+Combining stems and affixes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The main special character, used in both the dictionary and the paradigms, is ``.``. In a stem, it means "one regular part of an affix"; in an affix, it means "one regular part of a stem". When combining a stem with an affix, the stem's dots should match regular parts of the affix, and vice versa. All regular parts must be accounted for; matching starts from the stem. For example, the stem of an English noun "cat" could look like ``cat.``, the singular morpheme would look like ``.``, and the plural morpheme, like ``.s``. This is how the stem is combined with the plural affix:
 
@@ -58,5 +63,45 @@ When the same stem is joined with the combination of affixes ``.a..atli`` (prese
 |       | ``.`` | ``a`` | ``.`` |       | ``.`` | ``atli`` |
 +-------+-------+-------+-------+-------+-------+----------+
 
+Combining multiple affixes
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _FieldWorks: https://software.sil.org/fieldworks/
+Although you could list all possible combinations of affixes for each lexical class, thes may comprise thousands or millions items in morphologically rich languages. Instead, you can describe separate inflectional morphemes separately. This is especially convenient for agglutinative languages where each morpheme occupies a certain slot and and almost (or almost always) looks the same. If this is the case, some morpheme parts will contain the special sequence ``<.>``, which stands for one segment of another morpheme that includes regular characters or other ``<.>`` sequcnes. Consider the following example from Adyghe, a polysynthetic NW Caucasian language (written in IPA transliteration for clarity):
+
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``qə`` | ``zer`` | ``a`` | ``x``   | ``jə`` | ``ʁe``  | ``tedʒə`` | ``tʃʼə`` | ``ʑə`` | ``ʁe`` | ``m`` | ``tʃʼe`` |
++========+=========+=======+=========+========+=========+===========+==========+========+========+=======+==========+
+|                          ``.``                        | ``tedʒə`` | ``.``                                         |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``qə`` | ``<.>``                                      | ``.``     | ``<.>``                                       |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``  | ``zer`` | ``<.>``                            | ``.``     | ``<.>``                                       |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``            | ``a`` | ``<.>``                    | ``.``     | ``<.>``                                       |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                    | ``x``   | ``<.>``          | ``.``     | ``<.>``                                       |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                              | ``jə`` | ``<.>`` | ``.``     | ``<.>``                                       |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                                       | ``ʁe``  | ``.``     | ``<.>``                                       |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                                                             | ``tʃʼə`` | ``<.>``                            |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                                                                        | ``ʑə`` | ``<.>``                   |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                                                                                 | ``ʁe`` | ``<.>``          |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                                                                                          | ``m`` | ``<.>``  |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+| ``.``                                                                                                  | ``tʃʼe`` |
++--------+---------+-------+---------+--------+---------+-----------+----------+--------+--------+-------+----------+
+
+Here 11 affixes, each occupying its own slot, combine with the stem to produce the mind-boggling word form *qəzeraxjəʁetedʒətʃʼəʑəʁemtʃʼe*. First, all affixes were combined (the order in which they combine with each other is described by links in the respective paradigms) into full inflection ``qəzeraxjəʁe.tʃʼəʑəʁemtʃʼe``, which, in turn, was combined with the stem ``.tedʒə.``. When combining affixes, ``.`` means "one segment of the previous affix (in terms of the order specified by the links) or the stem that includes regular characters or ``.``", and ``<.>`` means "one part of the next affix that includes regular characters or ``<.>``". So, from the point of view of the analyzer, this is what happened::
+
+    qə<.>.<.> + .zer<.>.<.> = qəzer<.>.<.>
+    qəzer<.>.<.> + .a<.>.<.> = qəzera<.>.<.>
+    ...
+    qəzeraxjəʁe.<.> + .tʃʼə<.> = qəzeraxjəʁe.tʃʼə<.>
+    ...
+    qəzeraxjəʁe.tʃʼəʑəʁem<.> + .tʃʼe = qəzeraxjəʁe.tʃʼəʑəʁemtʃʼe
+    .tedʒə. + qəzeraxjəʁe.tʃʼəʑəʁemtʃʼe = qəzeraxjəʁetedʒətʃʼəʑəʁemtʃʼe

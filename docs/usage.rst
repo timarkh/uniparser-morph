@@ -38,11 +38,31 @@ If you want to analyze words or sentences on the fly, call ``analyze_words()``::
 	# like <w><ana lex="..." gr="..." ...></ana>...</w>
 	# for each token instead of a list of Wordform objects
 
-	analyses = a.analyze_words(['Морфологияез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]],
+	analyses = a.analyze_words(['Морфологиез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]],
 	                           format='json')
 	# format='json' means you will get a list of dictionaries
 	# such as {'lemma': ..., 'gramm': [...], ...}
 	# for each token instead of a list of Wordform objects
+
+Disambiguation with Constraint Grammar
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, ``uniparser-morph`` analyses words in isolation. This leads to occasional ambiguity, whereby a word can have multiple plausible analyses, only one of which is correct in any given context. This is a general downside of rule-based approach to morphological analysis in comparison to machine-learning methods. However, you may use rules to (partially) remove the ambiguity. One way of doing that is using the `Constraint Grammar`_ rules. If you have a CG file you would like to use after analyzing the text, you can pass the path to it when calling ``analyze_words()``::
+
+	analyses = a.analyze_words(['Мон', 'морфологиез', 'яратӥсько', '.'],
+	                           cgFile=os.path.abspath('disambiguation.cg3'),
+	                           disambiguate=True)
+
+The analyzer will call the ``cg3`` executable to disambiguate your words. For this to work, you have to install CG3 separately. On Ubuntu/Debian, you can use ``apt-get``::
+
+	sudo apt-get install cg3
+
+On Windows, download the binary and add the path to the ``PATH`` environment variable. See `the documentation`_ for other options.
+
+Note that each time you call ``analyze_words()`` with ``disambiguate=True``, the CG grammar is loaded and compiled from scratch, which makes the analysis even slower. If you are analyzing a large text, it would make sense to pass the entire text contents in a single function call rather than do it sentence-by-sentence, for optimal performance.
+
+.. _Constraint Grammar: https://visl.sdu.dk/constraint_grammar.html
+.. _the documentation: https://visl.sdu.dk/cg3/single/#installation
 
 Analyze frequency lists
 ^^^^^^^^^^^^^^^^^^^^^^^

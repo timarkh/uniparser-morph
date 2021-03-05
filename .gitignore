@@ -12,6 +12,7 @@ paradigms.txt
 bad_analyses.txt
 derivations.txt
 lex_rules.txt
+*.cg3
 .Python
 env/
 build/

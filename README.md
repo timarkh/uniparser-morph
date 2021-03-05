@@ -30,13 +30,13 @@ a = Analyzer()
 # Put your grammar files in the current folder or set paths as properties of the Analyzer class (see below)
 a.load_grammar()
 
-analyses = a.analyze_words('Морфологияез')
+analyses = a.analyze_words('Морфологиез')
 # The parser is initialized before first use, so expect some delay here (usually several seconds)
 # You will get a list of Wordform objects
 
 # You can also pass lists (even nested lists) and specify output format ('xml' or 'json'):
 analyses = a.analyze_words([['А'], ['Мон', 'тонэ', 'яратӥсько', '.']], format='xml')
-analyses = a.analyze_words(['Морфологияез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]], format='json')
+analyses = a.analyze_words(['Морфологиез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]], format='json')
 ```
 
 If you need to parse a frequency list, use ``analyze_wordlist()`` instead.
@@ -45,3 +45,22 @@ See [the documentation](https://uniparser-morph.readthedocs.io/en/latest/) for t
 
 ## Format
 If you want to create a ``uniparser-morph`` analyzer for your language, you will have to write a set of rules that describe the vocabulary and the morphology of your language in ``uniparser-morph`` format. For the description of the format, [refer to documentation](https://uniparser-morph.readthedocs.io/en/latest/) .
+
+## Disambiguation with CG
+If you have disambiguation rules in the [Constraint Grammar](https://visl.sdu.dk/constraint_grammar.html) format, you can use them in the following way when calling ``analyze_words()``:
+
+```python
+analyses = a.analyze_words(['Мон', 'морфологиез', 'яратӥсько', '.'],
+                           cgFile=os.path.abspath('disambiguation.cg3'),
+                           disambiguate=True)
+```
+
+In order for this to work, you have to install the ``cg3`` executable separately. On Ubuntu/Debian, you can use ``apt-get``:
+
+```
+sudo apt-get install cg3
+```
+
+On Windows, download the binary and add the path to the ``PATH`` environment variable. See [the documentation](https://visl.sdu.dk/cg3/single/#installation) for other options.
+
+Note that each time you call ``analyze_words()`` with ``disambiguate=True``, the CG grammar is loaded and compiled from scratch, which makes the analysis even slower. If you are analyzing a large text, it would make sense to pass the entire text contents in a single function call rather than do it sentence-by-sentence, for optimal performance.

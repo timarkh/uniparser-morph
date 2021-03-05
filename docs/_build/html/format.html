@@ -63,6 +63,8 @@
 <h2>Morphemes<a class="headerlink" href="#morphemes" title="Permalink to this headline">¶</a></h2>
 <p>As said before, there is no need for linguistic accuracy when describing morpheme boundaries. In what follows, a <em>morpheme</em> is understood as a string in a <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> description object that resides either in <code class="docutils literal notranslate"><span class="pre">lexemes.txt</span></code> or in <code class="docutils literal notranslate"><span class="pre">paradigms.txt</span></code>. It can be either a real morpheme (stem or affix), or a combination of several affixes, or just some string that can occur within a word.</p>
 <p>Each morpheme can contain regular characters and special sequences. Regular characters (letters, hyphens, digits etc.) will be used by the analyzer to find a match in the word. An uninterrupted sequence of regular characters constitutes one regular part of the morpheme. A regular part may be empty; there may be multiple regular parts in a morpheme. Special characters are used to define how morphemes combine with each other.</p>
+<div class="section" id="combining-stems-and-affixes">
+<h3>Combining stems and affixes<a class="headerlink" href="#combining-stems-and-affixes" title="Permalink to this headline">¶</a></h3>
 <p>The main special character, used in both the dictionary and the paradigms, is <code class="docutils literal notranslate"><span class="pre">.</span></code>. In a stem, it means “one regular part of an affix”; in an affix, it means “one regular part of a stem”. When combining a stem with an affix, the stem’s dots should match regular parts of the affix, and vice versa. All regular parts must be accounted for; matching starts from the stem. For example, the stem of an English noun “cat” could look like <code class="docutils literal notranslate"><span class="pre">cat.</span></code>, the singular morpheme would look like <code class="docutils literal notranslate"><span class="pre">.</span></code>, and the plural morpheme, like <code class="docutils literal notranslate"><span class="pre">.s</span></code>. This is how the stem is combined with the plural affix:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -139,6 +141,111 @@
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section" id="combining-multiple-affixes">
+<h3>Combining multiple affixes<a class="headerlink" href="#combining-multiple-affixes" title="Permalink to this headline">¶</a></h3>
+<p>Although you could list all possible combinations of affixes for each lexical class, thes may comprise thousands or millions items in morphologically rich languages. Instead, you can describe separate inflectional morphemes separately. This is especially convenient for agglutinative languages where each morpheme occupies a certain slot and and almost (or almost always) looks the same. If this is the case, some morpheme parts will contain the special sequence <code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code>, which stands for one segment of another morpheme that includes regular characters or other <code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code> sequcnes. Consider the following example from Adyghe, a polysynthetic NW Caucasian language (written in IPA transliteration for clarity):</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 9%" />
+<col style="width: 7%" />
+<col style="width: 9%" />
+<col style="width: 8%" />
+<col style="width: 9%" />
+<col style="width: 11%" />
+<col style="width: 10%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 7%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">qə</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">zer</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">x</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">jə</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">ʁe</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">tedʒə</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">tʃʼə</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">ʑə</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">ʁe</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">tʃʼe</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td colspan="6"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tedʒə</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qə</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">zer</span></code></p></td>
+<td colspan="4"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td colspan="2"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">a</span></code></p></td>
+<td colspan="3"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td colspan="3"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">x</span></code></p></td>
+<td colspan="2"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td colspan="4"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">jə</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ʁe</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td colspan="5"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td colspan="7"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tʃʼə</span></code></p></td>
+<td colspan="4"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td colspan="8"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ʑə</span></code></p></td>
+<td colspan="3"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td colspan="9"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ʁe</span></code></p></td>
+<td colspan="2"><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td colspan="10"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">m</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td colspan="11"><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tʃʼe</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Here 11 affixes, each occupying its own slot, combine with the stem to produce the mind-boggling word form <em>qəzeraxjəʁetedʒətʃʼəʑəʁemtʃʼe</em>. First, all affixes were combined (the order in which they combine with each other is described by links in the respective paradigms) into full inflection <code class="docutils literal notranslate"><span class="pre">qəzeraxjəʁe.tʃʼəʑəʁemtʃʼe</span></code>, which, in turn, was combined with the stem <code class="docutils literal notranslate"><span class="pre">.tedʒə.</span></code>. When combining affixes, <code class="docutils literal notranslate"><span class="pre">.</span></code> means “one segment of the previous affix (in terms of the order specified by the links) or the stem that includes regular characters or <code class="docutils literal notranslate"><span class="pre">.</span></code>”, and <code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code> means “one part of the next affix that includes regular characters or <code class="docutils literal notranslate"><span class="pre">&lt;.&gt;</span></code>”. So, from the point of view of the analyzer, this is what happened:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qə</span><span class="o">&lt;.&gt;.&lt;.&gt;</span> <span class="o">+</span> <span class="o">.</span><span class="n">zer</span><span class="o">&lt;.&gt;.&lt;.&gt;</span> <span class="o">=</span> <span class="n">qəzer</span><span class="o">&lt;.&gt;.&lt;.&gt;</span>
+<span class="n">qəzer</span><span class="o">&lt;.&gt;.&lt;.&gt;</span> <span class="o">+</span> <span class="o">.</span><span class="n">a</span><span class="o">&lt;.&gt;.&lt;.&gt;</span> <span class="o">=</span> <span class="n">qəzera</span><span class="o">&lt;.&gt;.&lt;.&gt;</span>
+<span class="o">...</span>
+<span class="n">qəzeraxjəʁe</span><span class="o">.&lt;.&gt;</span> <span class="o">+</span> <span class="o">.</span><span class="n">tʃʼə</span><span class="o">&lt;.&gt;</span> <span class="o">=</span> <span class="n">qəzeraxjəʁe</span><span class="o">.</span><span class="n">tʃʼə</span><span class="o">&lt;.&gt;</span>
+<span class="o">...</span>
+<span class="n">qəzeraxjəʁe</span><span class="o">.</span><span class="n">tʃʼəʑəʁem</span><span class="o">&lt;.&gt;</span> <span class="o">+</span> <span class="o">.</span><span class="n">tʃʼe</span> <span class="o">=</span> <span class="n">qəzeraxjəʁe</span><span class="o">.</span><span class="n">tʃʼəʑəʁemtʃʼe</span>
+<span class="o">.</span><span class="n">tedʒə</span><span class="o">.</span> <span class="o">+</span> <span class="n">qəzeraxjəʁe</span><span class="o">.</span><span class="n">tʃʼəʑəʁemtʃʼe</span> <span class="o">=</span> <span class="n">qəzeraxjəʁetedʒətʃʼəʑəʁemtʃʼe</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 

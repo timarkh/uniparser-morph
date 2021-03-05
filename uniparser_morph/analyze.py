@@ -4,6 +4,7 @@ import html
 from .morph_parser import Parser
 from .grammar import Grammar
 from .wordform import Wordform
+from .cg_disambiguate import CGDisambiguator
 
 
 class Analyzer:
@@ -15,6 +16,7 @@ class Analyzer:
         self.verboseGrammar = verbose_grammar
         self.g = Grammar(verbose=self.verboseGrammar)   # Empty grammar
         self.m = None                                   # Morphological parser
+        self.disambiguator = CGDisambiguator(self.g)    # Constraint Grammar disambiguator
         self.paradigmFile = 'paradigms.txt'
         self.lexFile = 'lexemes.txt'
         self.lexRulesFile = 'lex_rules.txt'
@@ -160,7 +162,7 @@ class Analyzer:
         }
         return stats
 
-    def __analyze_word__(self, word, format=None):
+    def __analyze_word__(self, word):
         """
         Analyze a single word. Return either a list of its analyses
         or a list with a single Wordform object that has only the wf
@@ -168,10 +170,7 @@ class Analyzer:
         """
         analyses = self.m.parse(word.lower())
         if len(analyses) <= 0:
-            if format == 'xml':
-                analyses = '<w>' + html.escape(word) + '</w>'
-            else:
-                analyses = [Wordform(self.g, wf=word)]
+            analyses = [Wordform(self.g, wf=word)]
         else:
             for ana in analyses:
                 ana.wf = word       # Reverse lowering if needed.
@@ -183,7 +182,54 @@ class Analyzer:
             analyses = [ana.to_json() for ana in analyses]
         return analyses
 
-    def analyze_words(self, words, format=None):
+    def analyze_words_nodisamb(self, words):
+        """
+        Analyze a single word or a (possibly nested) list of words. Return either a list of
+        analyses (all possible analyses of the word) or a nested list of lists
+        of analyses with the same depth as the original list.
+        The analyses are Wordform objects.
+        Do not perform disambiguation.
+        """
+        self.initialize_parser()
+        if type(words) == str:
+            return self.__analyze_word__(words)
+        elif type(words) == list:
+            return [self.analyze_words_nodisamb(w) for w in words]
+        return []
+
+    def analyses_to_xml(self, analyses):
+        """
+        Transform all lists of Wordform objects in a (possibly nested) list
+        Modify the analyses list, do not return anything.
+        """
+        for i in range(len(analyses)):
+            if type(analyses[i]) == list:
+                if len(analyses[i]) <= 0:
+                    continue
+                elif all(type(ana) == Wordform for ana in analyses[i]):
+                    analyses[i] = '<w>' + ''.join(ana.to_xml(glossing=self.glossing)
+                                                  for ana in analyses[i]) + \
+                                  html.escape(analyses[i][0].wf) + '</w>'
+                else:
+                    self.analyses_to_xml(analyses[i])
+            elif type(analyses[i]) == Wordform:
+                # This should not happen, but just in case
+                analyses[i] = '<w>' + analyses[i].to_xml(glossing=self.glossing) + \
+                              html.escape(analyses[i].wf) + '</w>'
+
+    def analyses_to_json(self, analyses):
+        """
+        Transform all Wordform objects in a (possibly nested) list
+        into dictionaries.
+        Modify the analyses list, do not return anything.
+        """
+        for i in range(len(analyses)):
+            if type(analyses[i]) == list:
+                self.analyses_to_json(analyses[i])
+            else:
+                analyses[i] = analyses[i].to_json(glossing=self.glossing)
+
+    def analyze_words(self, words, cgFile='', format=None, disambiguate=True):
         """
         Analyze a single word or a (possibly nested) list of words. Return either a list of
         analyses (all possible analyses of the word) or a nested list of lists
@@ -191,10 +237,13 @@ class Analyzer:
         If format is None, the analyses are Wordform objects.
         If format == 'xml', the analyses for each word are united into an XML string.
         If format == 'json', the analyses are JSON objects (dictionaries).
+        Perform CG3 disambiguation if disambiguate == True and there is a CG3 file.
         """
-        self.initialize_parser()
-        if type(words) == str:
-            return self.__analyze_word__(words, format=format)
-        elif type(words) == list:
-            return [self.analyze_words(w, format=format) for w in words]
-        return []
+        analyses = self.analyze_words_nodisamb(words)
+        if disambiguate and len(cgFile) > 0 and os.path.exists(cgFile):
+            self.disambiguator.disambiguate_analyses(analyses, cgFile)
+        if format == 'xml':
+            self.analyses_to_xml(analyses)
+        elif format == 'json':
+            self.analyses_to_json(analyses)
+        return analyses

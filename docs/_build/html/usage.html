@@ -65,13 +65,28 @@
 <span class="c1"># like &lt;w&gt;&lt;ana lex=&quot;...&quot; gr=&quot;...&quot; ...&gt;&lt;/ana&gt;...&lt;/w&gt;</span>
 <span class="c1"># for each token instead of a list of Wordform objects</span>
 
-<span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([</span><span class="s1">&#39;Морфологияез&#39;</span><span class="p">,</span> <span class="p">[[</span><span class="s1">&#39;А&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;тонэ&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]]],</span>
+<span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([</span><span class="s1">&#39;Морфологиез&#39;</span><span class="p">,</span> <span class="p">[[</span><span class="s1">&#39;А&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;тонэ&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]]],</span>
                            <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">)</span>
 <span class="c1"># format=&#39;json&#39; means you will get a list of dictionaries</span>
 <span class="c1"># such as {&#39;lemma&#39;: ..., &#39;gramm&#39;: [...], ...}</span>
 <span class="c1"># for each token instead of a list of Wordform objects</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="disambiguation-with-constraint-grammar">
+<h3>Disambiguation with Constraint Grammar<a class="headerlink" href="#disambiguation-with-constraint-grammar" title="Permalink to this headline">¶</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> analyses words in isolation. This leads to occasional ambiguity, whereby a word can have multiple plausible analyses, only one of which is correct in any given context. This is a general downside of rule-based approach to morphological analysis in comparison to machine-learning methods. However, you may use rules to (partially) remove the ambiguity. One way of doing that is using the <a class="reference external" href="https://visl.sdu.dk/constraint_grammar.html">Constraint Grammar</a> rules. If you have a CG file you would like to use after analyzing the text, you can pass the path to it when calling <code class="docutils literal notranslate"><span class="pre">analyze_words()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;морфологиез&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">],</span>
+                           <span class="n">cgFile</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;disambiguation.cg3&#39;</span><span class="p">),</span>
+                           <span class="n">disambiguate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The analyzer will call the <code class="docutils literal notranslate"><span class="pre">cg3</span></code> executable to disambiguate your words. For this to work, you have to install CG3 separately. On Ubuntu/Debian, you can use <code class="docutils literal notranslate"><span class="pre">apt-get</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">cg3</span>
+</pre></div>
+</div>
+<p>On Windows, download the binary and add the path to the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> environment variable. See <a class="reference external" href="https://visl.sdu.dk/cg3/single/#installation">the documentation</a> for other options.</p>
+<p>Note that each time you call <code class="docutils literal notranslate"><span class="pre">analyze_words()</span></code> with <code class="docutils literal notranslate"><span class="pre">disambiguate=True</span></code>, the CG grammar is loaded and compiled from scratch, which makes the analysis even slower. If you are analyzing a large text, it would make sense to pass the entire text contents in a single function call rather than do it sentence-by-sentence, for optimal performance.</p>
 </div>
 <div class="section" id="analyze-frequency-lists">
 <h3>Analyze frequency lists<a class="headerlink" href="#analyze-frequency-lists" title="Permalink to this headline">¶</a></h3>
