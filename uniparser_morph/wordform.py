@@ -99,13 +99,21 @@ class Wordform:
                                                              sublex.gloss,
                                                              flex)
 
-    def to_xml(self, glossing=True):
+    def to_xml(self, glossing=True, sort_tags=False):
         """
         Return an XML representation of the analysis in the format of
         Russian National Corpus.
         If glossing is True, include the glossing information.
         """
-        r = '<ana lex="' + self.lemma + '" gr="' + self.gramm + '"'
+        if self.lemma is None:
+            self.lemma = ''
+        if self.gramm is None:
+            self.gramm = ''
+        gramm = self.gramm.strip()
+        if sort_tags:
+            gramm = ','.join(tag for tag in sorted(self.gramm.split(','))
+                             if len(tag) > 0)
+        r = '<ana lex="' + self.lemma + '" gr="' + gramm + '"'
         if glossing:
             r += ' parts="' + self.wfGlossed + '" gloss="' + self.gloss + '"'
         for field, value in self.otherData:
@@ -113,16 +121,25 @@ class Wordform:
                 r += ' ' + field + '="' + value.replace('"', "'") + '"'
         return r + '></ana>'
 
-    def to_json(self, glossing=True):
+    def to_json(self, glossing=True, sort_tags=False):
         """
         Return a JSON representation of the analysis.
         If glossing is True, include the glossing information.
         """
+        if self.lemma is None:
+            self.lemma = ''
+        if self.gramm is None:
+            self.gramm = ''
         r = {
             'wf': self.wf,
-            'lemma': self.lemma,
-            'gramm': [tag for tag in self.gramm.split(',') if len(tag) > 0]
+            'lemma': self.lemma
         }
+        if sort_tags:
+            r['gramm'] = [tag for tag in sorted(self.gramm.split(','))
+                          if len(tag) > 0]
+        else:
+            r['gramm'] = [tag for tag in self.gramm.split(',')
+                          if len(tag) > 0]
         if glossing:
             r['wfGlossed'] = self.wfGlossed
             r['gloss'] = self.gloss
@@ -139,7 +156,9 @@ class Wordform:
             self.lemma = ''
         if self.gramm is None:
             self.gramm = ''
-        r += self.lemma + '; ' + self.gramm + '\n'
+        r += self.lemma + '; ' + ','.join(tag for tag in sorted(self.gramm.split(','))
+                                          if len(tag) > 0)\
+             + '\n'
         r += self.wfGlossed + '\n'
         r += self.gloss + '\n'
         for field, value in self.otherData:
