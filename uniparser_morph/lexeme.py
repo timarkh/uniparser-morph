@@ -1,6 +1,7 @@
 import copy
 import json
-from .common_functions import check_compatibility, lexPropertyFields, join_stem_flex
+from .common_functions import check_compatibility, lexPropertyFields, join_stem_flex,\
+    remove_morph_breaks, replace_morph_breaks
 from .wordform import Wordform
 
 
@@ -18,10 +19,11 @@ class SubLexeme:
         # {-1} means the stem can only be incorporated)
         if type(self.numStem) == int:
             self.numStem = {self.numStem}
-        self.stem = stem
+        self.stem = remove_morph_breaks(stem)
+        self.stemParts = stem    # the stem with the morph breaks, if any
         self.paradigm = paradigm
         self.gramm = gramm
-        self.gloss = gloss
+        self.gloss = replace_morph_breaks(gloss)
         self.lex = lex          # the Lexeme object this SubLexeme is a part of
         self.noIncorporation = noIncorporation
 
@@ -35,7 +37,7 @@ class SubLexeme:
         """
         if not check_compatibility(self, flexInTable.afx):
             return None
-        middleStem = self.stem
+        middleStem = self.stemParts
         if middleStem.startswith('.'):
             middleStem = middleStem[1:]
         if middleStem.endswith('.'):
@@ -48,7 +50,7 @@ class SubLexeme:
 
     def __repr__(self):
         res = '<SubLexeme>\n'
-        res += 'stem: ' + self.stem + '\n'
+        res += 'stem: ' + self.stemParts + '\n'
         res += 'paradigm: ' + self.paradigm + '\n'
         res += 'gramm: ' + self.gramm + '\n'
         res += 'gloss: ' + self.gloss + '\n'
@@ -256,7 +258,7 @@ class Lexeme:
         """
         Check if there is a gloss associated with the lexeme,
         otherwise use the English translation (if any) or another
-        default property as a gloss. If none are found, use 'ROOT'
+        default property as a gloss. If none are found, use 'STEM'
         for a gloss.
         """
         if len(self.gloss) <= 0:

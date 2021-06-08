@@ -76,6 +76,24 @@ def check_for_regex(item, rxTest, errorHandler=None, checkWordform=False):
     return True
 
 
+def remove_morph_breaks(stem):
+    """
+    If the stem contains several morphemes separated by a & sign,
+    join them for lookup purposes.
+    """
+    stem = stem.replace('&', '')
+    return stem
+
+
+def replace_morph_breaks(gloss):
+    """
+    If the stem or its gloss contains several parts separated by a & sign,
+    replace it with a hyphen.
+    """
+    gloss = gloss.replace('&', '-')
+    return gloss
+
+
 rxCleanL = re.compile('([>~\\-])-+')
 rxCleanR = re.compile('-+([<~])$')
 
@@ -120,9 +138,9 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
             continue
         curPart = parts[iSide][pos[iSide]]
         if iSide == 0:
-            wf += curPart
+            wf += remove_morph_breaks(curPart)
             bStemStarted = True
-            wfGlossed += curPart
+            wfGlossed += replace_morph_breaks(curPart)
             if glossType in [GLOSS_STEM, GLOSS_STEM_FORCED]:
                 mainPart += stemGloss + stemSpecs
         elif iSide == 1:

@@ -50,7 +50,7 @@
 <p>Pre-defined fields that have to be present in each lexeme are the following:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">lex</span></code> stands for lemma, or dictionary form, of the lexeme.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stem</span></code> contains a string describing the stem of the lexeme as a morpheme object (see <a class="reference internal" href="format.html"><span class="doc">format overview</span></a>). If there are several free variants, i.e. variants that are equally possible in any context, they may be written inside one value separated by <code class="docutils literal notranslate"><span class="pre">//</span></code>. In the example above, the stem of the numeral <em>eight</em> in Meadow Mari can be written either as a word <em>кандаш</em> or as a numeral <em>8</em>. In both cases, affixes can only attach to the right side of it, which is why there is a dot at the right. A stem can only include the root morpheme or be a combination of a root with some (probably non-productive) derivational affixes that you want to treat as a single lexeme.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stem</span></code> contains a string describing the stem of the lexeme as a morpheme object (see <a class="reference internal" href="format.html"><span class="doc">format overview</span></a>). If there are several free variants, i.e. variants that are equally possible in any context, they may be written inside one value separated by <code class="docutils literal notranslate"><span class="pre">//</span></code>. In the example above, the stem of the numeral <em>eight</em> in Meadow Mari can be written either as a word <em>кандаш</em> or as a numeral <em>8</em>. In both cases, affixes can only attach to the right side of it, which is why there is a dot at the right. A stem can only include the root morpheme or be a combination of a root with some (probably non-productive) derivational affixes that you want to treat as a single lexeme (see <code class="docutils literal notranslate"><span class="pre">Morpheme</span> <span class="pre">segmentation</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">stem</span></code> below).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">gramm</span></code> contains tags separated by a comma. Normally tags for a lexeme would include its part of speech (<code class="docutils literal notranslate"><span class="pre">NUM</span></code> in this case) and, possibly, some dictionary categories such as gender / noun class for nouns or transitivity for verbs.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">paradigm</span></code> is a link to the inflectional paradigm for this lexeme, which describes how forms of this lexeme can be produced from its stem(s). Even if the lexeme can not be inflected (e.g. it’s a conjunction), there has to be a link, which should in this case lead to a paradigm with a single empty affix. The value must be a name of a paradigm listed in <a class="reference internal" href="paradigms.html"><span class="doc">paradigms.txt</span></a>. There may be multiple paradigm links specified by multiple <code class="docutils literal notranslate"><span class="pre">paradigm</span></code> keys.</p></li>
 </ul>
@@ -73,6 +73,21 @@
 </pre></div>
 </div>
 <p>The stems are automatically numbered by <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code>: the first stem, <em>борд.</em>, is considered to have the number 0, while <em>бордй.</em> has the number 1. These numbers can be used in <a class="reference internal" href="paradigms.html"><span class="doc">paradigms.txt</span></a> to specify which morpheme requires which stem allomorph.</p>
+</div>
+<div class="section" id="morpheme-segmentation-in-the-stem">
+<h2>Morpheme segmentation in the stem<a class="headerlink" href="#morpheme-segmentation-in-the-stem" title="Permalink to this headline">¶</a></h2>
+<p>Although in many cases what you describe as the stem only consists of one morpheme, it can also be a combination of a root and a number of derivations. If you enable glossing and want the stem to be split into several morphemes, each with a separate gloss, you can indicate the morpheme and gloss breaks with the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> character. (Note that this is done with a different character than in the <a class="reference internal" href="paradigms.html"><span class="doc">paradigms</span></a> for historical reasons.) This could make sense in the case of not-very-productive derivations that you wouldn’t describe in the paradigms, but would still like to see in the annotation. Here is an Udmurt example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">lexeme</span>
+ <span class="n">lex</span><span class="p">:</span> <span class="n">котькуд</span>
+ <span class="n">stem</span><span class="p">:</span> <span class="n">коть</span><span class="o">&amp;</span><span class="n">куд</span><span class="o">.</span>
+ <span class="n">gramm</span><span class="p">:</span> <span class="n">ADJPRO</span>
+ <span class="n">gloss</span><span class="p">:</span> <span class="n">INDEF</span><span class="o">&amp;</span><span class="n">which</span>
+ <span class="n">paradigm</span><span class="p">:</span> <span class="n">Noun</span><span class="o">-</span><span class="n">mar</span>
+ <span class="n">trans_en</span><span class="p">:</span> <span class="n">whichever</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> character splits the stem, <code class="docutils literal notranslate"><span class="pre">котькуд</span></code>, in two parts: <code class="docutils literal notranslate"><span class="pre">коть</span></code>, an indefiniteness marker glossed as <code class="docutils literal notranslate"><span class="pre">INDEF</span></code>, and the root <code class="docutils literal notranslate"><span class="pre">куд</span></code>, glossed <code class="docutils literal notranslate"><span class="pre">which</span></code>.</p>
+<p>Stem morpheme segmentation is designed for concatenative morphology and is not intended for stems that allow infixes.</p>
 </div>
 </div>
 
@@ -100,6 +115,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">lexemes.txt</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multiple-stems">Multiple stems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#morpheme-segmentation-in-the-stem">Morpheme segmentation in the stem</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
@@ -143,7 +159,7 @@
       &copy;2021, Timofey Arkhangelskiy.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

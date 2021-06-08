@@ -92,7 +92,7 @@ class Wordform:
         self.lemma = lex.lemma
 
     def build_value(self, sublex, flex):
-        subLexStem = sublex.stem
+        subLexStem = sublex.stemParts
         if flex.startWithSelf and not subLexStem.startswith('.'):
             subLexStem = '.' + subLexStem
         self.wf, self.wfGlossed, self.gloss = join_stem_flex(subLexStem,
