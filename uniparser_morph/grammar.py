@@ -28,17 +28,19 @@ class Grammar:
         else:
             self.errorHandler = errorHandler
 
-        self.RECURS_LIMIT = 2        # max number of times every given paradigm
-                                     # may appear in a wordform
-                                     # paradigm compilation options
-        self.PARTIAL_COMPILE = True  # compile until the following restrictions are met:
-        self.MIN_FLEX_LENGTH = 1     # when PARTIAL_COMPILE is set
-        self.MAX_COMPILE_TIME = 60   # when PARTIAL_COMPILE is set
+        self.RECURS_LIMIT = 2             # max number of times every given paradigm
+                                          # may appear in a wordform
+                                          # paradigm compilation options
+        self.PARTIAL_COMPILE = True       # compile until the following restrictions are met:
+        self.MIN_FLEX_LENGTH = 1          # when PARTIAL_COMPILE is set
+        self.MAX_COMPILE_TIME = 60        # when PARTIAL_COMPILE is set
 
-        self.DERIV_LIMIT = 5         # counts only non-empty derivands
-        self.FLEX_LENGTH_LIMIT = 20  # max inflexion length (without metacharacters)
-        self.TOTAL_DERIV_LIMIT = 10  # counts everything
-        self.MAX_DERIVATIONS = 2     # how many derivation models can appear in a word
+        self.DERIV_LIMIT = 5              # counts only non-empty derivands
+        self.FLEX_LENGTH_LIMIT = 20       # max inflexion length (without metacharacters)
+        self.TOTAL_DERIV_LIMIT = 10       # counts everything
+        self.MAX_DERIVATIONS = 2          # how many derivation models can appear in a word
+        self.COMPLEX_WF_AS_BAGS = False   # if lemma/gramm values should be plain strings
+                                          # with bags of values in multi-word tokens
 
         self.lexemes = []
         self.lexRulesByStem = {}

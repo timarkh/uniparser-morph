@@ -689,6 +689,8 @@ class Parser:
                 analysesSet.add(ana)
             else:
                 analysesSet |= enhancedAnas
+        for ana in analysesSet:
+            ana.expand_lex_morphs()
         return analysesSet
 
     def apply_lex_rules(self, ana):
@@ -737,16 +739,20 @@ class Parser:
                     analyses.append(wf)
                 elif cl.is_compatible(wf):
                     wf.wf = word
-                    wf.lemma += '+' + cl.lemma
-                    if len(wf.gramm) > 0 and len(cl.gramm) > 0:
-                        wf.gramm += ','
-                    wf.gramm += cl.gramm
+                    # Lemma
+                    wf.add_to_field('lemma', cl.lemma)
+                    # Grammatical tags
+                    wf.add_to_field('gramm', cl.gramm)
+                    # Additional fields
+                    for field, value in cl.otherData.items():
+                        wf.add_to_field(field, value)
+                    # Gloss
                     if cl.side == SIDE_PROCLITIC:
                         wf.gloss = cl.gloss + '=' + wf.gloss
                         wf.wfGlossed = cl.stem + '=' + wf.wfGlossed
                     else:
-                        wf.gloss += u'=' + cl.gloss
-                        wf.wfGlossed += u'=' + cl.stem
+                        wf.gloss += '=' + cl.gloss
+                        wf.wfGlossed += '=' + cl.stem
                     analyses.append(wf)
         if printOut:
             if len(analyses) <= 0:

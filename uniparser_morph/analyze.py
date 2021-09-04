@@ -32,6 +32,7 @@ class Analyzer:
         self.parsedFile = 'analyzed.txt'
         self.unparsedFile = 'unanalyzed.txt'
         self.glossing = True
+        self.complexWfAsBag = False
         self.xmlOutput = True
         self.partialCompile = True
         self.minFlexLen = 4
@@ -65,6 +66,7 @@ class Analyzer:
         self.g.PARTIAL_COMPILE = self.partialCompile
         self.g.MIN_FLEX_LENGTH = self.minFlexLen
         self.g.MAX_COMPILE_TIME = self.maxCompileTime
+        self.g.complexWfAsBag = self.complexWfAsBag
         paradigmFiles = self.collect_filenames(self.paradigmFile)
         lexFiles = self.collect_filenames(self.lexFile)
         lexRulesFiles = self.collect_filenames(self.lexRulesFile)

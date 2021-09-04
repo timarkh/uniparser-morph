@@ -1,8 +1,11 @@
 ﻿import copy
+import re
 from .common_functions import wfPropertyFields, check_compatibility, join_stem_flex
 
 
 class Wordform:
+    rxLexTag = re.compile(',?\\bLEX:([^,:]*):([^,:]*)')
+    rxLexTagOtherField = re.compile('^([^=]+)=(.*)')
     propertyFields = wfPropertyFields
     printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'lex2', 'gramm2',
                             'trans_ru2', 'trans_en2', 'trans_de2', 'root'}
@@ -87,6 +90,84 @@ class Wordform:
         if flex.keepOtherData:
             self.otherData = copy.deepcopy(lex.otherData)
 
+    def add_to_field(self, field, value):
+        """
+        Concatenate or append the string value to the specified
+        field, depending on self.g.COMPLEX_WF_AS_BAGS parameter value.
+        """
+        print(field, value)
+        if field in ('wf', 'wfGlossed', 'parts', 'gloss'):
+            return
+        elif field == 'lemma':
+            # Lemma
+            if self.g.COMPLEX_WF_AS_BAGS:
+                self.lemma += '+' + value
+            else:
+                if type(self.lemma) != list:
+                    self.lemma = [self.lemma]
+                self.lemma.append(value)
+        elif field == 'gramm':
+            # Grammatical tags
+            if self.g.COMPLEX_WF_AS_BAGS:
+                if len(self.gramm) > 0 and len(value) > 0:
+                    self.gramm += ','
+                self.gramm += value
+            else:
+                if type(self.gramm) != list:
+                    self.gramm = [self.gramm]
+                self.gramm.append(value)
+        else:
+            # Additional fields
+            bAdded = False
+            for iField in self.otherData:
+                curField, curValue = self.otherData[iField]
+                if curField == field:
+                    if self.g.COMPLEX_WF_AS_BAGS:
+                        if len(curValue) > 0 and len(value) > 0:
+                            curValue += ' + '
+                        curValue += value
+                    else:
+                        if type(curValue) != list:
+                            curValue = [curValue]
+                        curValue.append(value)
+                    self.otherData[iField] = (curField, curValue)
+                    bAdded = True
+            if not bAdded:
+                if not self.g.COMPLEX_WF_AS_BAGS:
+                    value = ['', value]
+                self.otherData.append((field, value))
+
+    def expand_lex_morphs(self):
+        """
+        Find tags that look like LEX:xxx:yyy and expand them. They
+        come from inflexions which actually contain items that require
+        separate lemmata, POS tags and, possibly, other fields, such as
+        intraclitics. Depending on self.g.COMPLEX_WF_AS_BAGS parameter value,
+        either concatenate lemma, gramm etc. fields with the data taken
+        from LEX:xxx:yyy as strings, or append them as list elements.
+        """
+        lexemes2add = []
+        lexTags = self.rxLexTag.findall(self.gramm)
+        if len(lexTags) <= 0:
+            return
+        self.gramm = self.rxLexTag.sub('', self.gramm)
+        for lemma, gramm in lexTags:
+            gramm = gramm.replace(';', ',')
+            lex2add = {'lemma': lemma, 'gramm': ''}
+            for tag in gramm.split(','):
+                m = self.rxLexTagOtherField.search(tag)
+                if m is not None:
+                    if m.group(1) not in ('wf', 'lemma', 'gramm', 'stem', 'gloss', 'parts', 'wfGlossed'):
+                        lex2add[m.group(1)] = m.group(2)
+                else:
+                    if len(lex2add['gramm']) > 0:
+                        lex2add['gramm'] += ','
+                    lex2add['gramm'] += tag
+            lexemes2add.append(lex2add)
+        for lex2add in lexemes2add:
+            for field, value in lex2add.items():
+                self.add_to_field(field, value)
+
     def get_lemma(self, lex, flex):
         # TODO: lemma changers
         self.lemma = lex.lemma
@@ -156,20 +237,30 @@ class Wordform:
             self.lemma = ''
         if self.gramm is None:
             self.gramm = ''
-        r += self.lemma + '; ' + ','.join(tag for tag in sorted(self.gramm.split(','))
-                                          if len(tag) > 0)\
-             + '\n'
+        r += str(self.lemma) + '; '
+        if type(self.gramm) == str:
+            r += ','.join(tag for tag in sorted(self.gramm.split(','))
+                          if len(tag) > 0)\
+                 + '\n'
+        elif type(self.gramm) == list:
+            r += "['"
+            for gr in self.gramm:
+                if len(r) > 2:
+                    r += "', '"
+                r += ','.join(tag for tag in sorted(gr.split(','))
+                              if len(tag) > 0)
+            r += "']\n"
         r += self.wfGlossed + '\n'
         r += self.gloss + '\n'
         for field, value in self.otherData:
-            r += field + '\t' + value + '\n'
+            r += field + '\t' + str(value) + '\n'
         return r
 
     def __hash__(self):
         return hash(str(self))
 
     def __eq__(self, other):
-        if self.wf != other.wf or self.lemma != other.lemma:
+        if self.wf != other.wf or (type(self.lemma) == str and self.lemma != other.lemma):
             return False
         return str(self) == str(other)
 
