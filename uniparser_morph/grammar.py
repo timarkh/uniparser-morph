@@ -52,6 +52,7 @@ class Grammar:
         self.stemConversions = {}
         self.derivations = {}
         self.badAnalyses = []
+        self.categories = {}         # tag -> category (needed for CoNLL format only)
 
     @staticmethod
     def raise_error(message, data=None):
@@ -270,6 +271,25 @@ class Grammar:
             if bAnaOk:
                 self.badAnalyses.append(ana)
         return len(self.badAnalyses)
+
+    def load_categories(self, fnames):
+        """
+        Load json descriptions of tag-category pairs (needed for
+        CoNLL format only).
+        """
+        self.categories = {}
+        if type(fnames) == str:
+            fnames = [fnames]
+        for fname in fnames:
+            try:
+                f = open(fname, 'r', encoding='utf-8-sig')
+                self.categories.update(json.loads(f.read()))
+                f.close()
+            except IOError:
+                self.raise_error('Error when opening a bad analyses file: ' + fname)
+            except json.JSONDecodeError:
+                self.raise_error('JSON error when reading a bad analyses file: ' + fname)
+        return len(self.categories)
 
     def add_deriv_links_to_paradigms(self):
         """

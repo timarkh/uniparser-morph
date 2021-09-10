@@ -24,6 +24,7 @@ class Wordform:
         self.gramm = ''
         self.stem = ''
         self.otherData = []     # list of tuples (name, value)
+        self.subwords = []      # Wordform objects, one for additional incorporated word
         if sublex is None or flex is None:
             return
         if flex.stemNum is not None and len(flex.stemNum) > 0 and 1 < sublex.lex.num_stems() <= max(flex.stemNum):
@@ -90,53 +91,6 @@ class Wordform:
         if flex.keepOtherData:
             self.otherData = copy.deepcopy(lex.otherData)
 
-    def add_to_field(self, field, value):
-        """
-        Concatenate or append the string value to the specified
-        field, depending on self.g.COMPLEX_WF_AS_BAGS parameter value.
-        """
-        print(field, value)
-        if field in ('wf', 'wfGlossed', 'parts', 'gloss'):
-            return
-        elif field == 'lemma':
-            # Lemma
-            if self.g.COMPLEX_WF_AS_BAGS:
-                self.lemma += '+' + value
-            else:
-                if type(self.lemma) != list:
-                    self.lemma = [self.lemma]
-                self.lemma.append(value)
-        elif field == 'gramm':
-            # Grammatical tags
-            if self.g.COMPLEX_WF_AS_BAGS:
-                if len(self.gramm) > 0 and len(value) > 0:
-                    self.gramm += ','
-                self.gramm += value
-            else:
-                if type(self.gramm) != list:
-                    self.gramm = [self.gramm]
-                self.gramm.append(value)
-        else:
-            # Additional fields
-            bAdded = False
-            for iField in self.otherData:
-                curField, curValue = self.otherData[iField]
-                if curField == field:
-                    if self.g.COMPLEX_WF_AS_BAGS:
-                        if len(curValue) > 0 and len(value) > 0:
-                            curValue += ' + '
-                        curValue += value
-                    else:
-                        if type(curValue) != list:
-                            curValue = [curValue]
-                        curValue.append(value)
-                    self.otherData[iField] = (curField, curValue)
-                    bAdded = True
-            if not bAdded:
-                if not self.g.COMPLEX_WF_AS_BAGS:
-                    value = ['', value]
-                self.otherData.append((field, value))
-
     def expand_lex_morphs(self):
         """
         Find tags that look like LEX:xxx:yyy and expand them. They
@@ -146,27 +100,24 @@ class Wordform:
         either concatenate lemma, gramm etc. fields with the data taken
         from LEX:xxx:yyy as strings, or append them as list elements.
         """
-        lexemes2add = []
         lexTags = self.rxLexTag.findall(self.gramm)
         if len(lexTags) <= 0:
             return
         self.gramm = self.rxLexTag.sub('', self.gramm)
         for lemma, gramm in lexTags:
             gramm = gramm.replace(';', ',')
-            lex2add = {'lemma': lemma, 'gramm': ''}
+            lex2add = Wordform(g=self.g, wf='')
+            lex2add.lemma = lemma
             for tag in gramm.split(','):
                 m = self.rxLexTagOtherField.search(tag)
                 if m is not None:
                     if m.group(1) not in ('wf', 'lemma', 'gramm', 'stem', 'gloss', 'parts', 'wfGlossed'):
-                        lex2add[m.group(1)] = m.group(2)
+                        lex2add.otherData.append((m.group(1), m.group(2)))
                 else:
-                    if len(lex2add['gramm']) > 0:
-                        lex2add['gramm'] += ','
-                    lex2add['gramm'] += tag
-            lexemes2add.append(lex2add)
-        for lex2add in lexemes2add:
-            for field, value in lex2add.items():
-                self.add_to_field(field, value)
+                    if len(lex2add.gramm) > 0:
+                        lex2add.gramm += ','
+                    lex2add.gramm += tag.strip()
+            self.subwords.append(lex2add)
 
     def get_lemma(self, lex, flex):
         # TODO: lemma changers
@@ -180,6 +131,33 @@ class Wordform:
                                                              sublex.gloss,
                                                              flex)
 
+    def append_subword_data(self):
+        """
+        If COMPLEX_WF_AS_BAGS is set, append lemma, tags and other
+        data from the subwords as strings, concatenating them with
+        + or , signs. Return concatenated strings.
+        """
+        gramm = self.gramm.strip()
+        lemma = self.lemma.strip()
+        otherData = self.otherData
+        if self.g.COMPLEX_WF_AS_BAGS and len(self.subwords) > 0:
+            otherData = copy.deepcopy(otherData)
+            for sw in self.subwords:
+                lemma += '+' + sw.lemma
+                if len(gramm) > 0 and len(sw.gramm) > 0:
+                    gramm += ','
+                gramm += sw.gramm
+                for field, value in sw.otherData:
+                    bAdded = False
+                    for i in range(len(otherData)):
+                        if otherData[i][0] == field:
+                            bAdded = True
+                            otherData[i] = (field, otherData[i][1] + ' + ' + value)
+                            break
+                    if not bAdded:
+                        otherData.append((field, value))
+        return lemma, gramm, otherData
+
     def to_xml(self, glossing=True, sort_tags=False):
         """
         Return an XML representation of the analysis in the format of
@@ -191,42 +169,71 @@ class Wordform:
         if self.gramm is None:
             self.gramm = ''
         gramm = self.gramm.strip()
+        lemma = self.lemma.strip()
+        otherData = self.otherData
+        if len(self.subwords) > 0 and self.g.COMPLEX_WF_AS_BAGS:
+            lemma, gramm, otherData = self.append_subword_data()
         if sort_tags:
             gramm = ','.join(tag for tag in sorted(self.gramm.split(','))
                              if len(tag) > 0)
-        r = '<ana lex="' + self.lemma + '" gr="' + gramm + '"'
+        r = '<ana lex="' + lemma + '" gr="' + gramm + '"'
         if glossing:
             r += ' parts="' + self.wfGlossed + '" gloss="' + self.gloss + '"'
-        for field, value in self.otherData:
+        for field, value in otherData:
             if field in Wordform.printableOtherFields:
                 r += ' ' + field + '="' + value.replace('"', "'") + '"'
+        if len(self.subwords) > 0 and not self.g.COMPLEX_WF_AS_BAGS:
+            return r + '></ana>' + ''.join(sw.to_xml(glossing=False, sort_tags=sort_tags)
+                                           for sw in self.subwords)
         return r + '></ana>'
 
     def to_json(self, glossing=True, sort_tags=False):
         """
         Return a JSON representation of the analysis.
         If glossing is True, include the glossing information.
+        If categories.json was supplied, transform gramm tag string
+        into a dictionary {category: value(s)}
         """
         if self.lemma is None:
             self.lemma = ''
         if self.gramm is None:
             self.gramm = ''
+        gramm = self.gramm.strip()
+        lemma = self.lemma.strip()
+        otherData = self.otherData
+        if len(self.subwords) > 0 and self.g.COMPLEX_WF_AS_BAGS:
+            lemma, gramm, otherData = self.append_subword_data()
         r = {
             'wf': self.wf,
-            'lemma': self.lemma
+            'lemma': lemma
         }
         if sort_tags:
-            r['gramm'] = [tag for tag in sorted(self.gramm.split(','))
+            r['gramm'] = [tag for tag in sorted(gramm.split(','))
                           if len(tag) > 0]
         else:
-            r['gramm'] = [tag for tag in self.gramm.split(',')
+            r['gramm'] = [tag for tag in gramm.split(',')
                           if len(tag) > 0]
+        if self.g.categories is not None and len(self.g.categories) > 0:
+            gramm = {}
+            for tag in r['gramm']:
+                cat = 'unassigned'
+                if tag in self.g.categories:
+                    cat = self.g.categories[tag]
+                if cat in gramm and len(gramm[cat]) > 0:
+                    gramm[cat] += ','
+                else:
+                    gramm[cat] = ''
+                gramm[cat] += tag
+            r['gramm'] = gramm
         if glossing:
             r['wfGlossed'] = self.wfGlossed
             r['gloss'] = self.gloss
-        for field, value in self.otherData:
+        for field, value in otherData:
             if field in Wordform.printableOtherFields:
                 r[field] = value
+        if len(self.subwords) > 0 and not self.g.COMPLEX_WF_AS_BAGS:
+            r['subwords'] = [sw.to_json(glossing=False, sort_tags=sort_tags)
+                             for sw in self.subwords]
         return r
 
     def __repr__(self):
@@ -254,6 +261,10 @@ class Wordform:
         r += self.gloss + '\n'
         for field, value in self.otherData:
             r += field + '\t' + str(value) + '\n'
+        if len(self.subwords) > 0:
+            r += '*** SUBWORDS ***\n'
+            for sw in self.subwords:
+                r += str(sw) + '-------------------\n'
         return r
 
     def __hash__(self):

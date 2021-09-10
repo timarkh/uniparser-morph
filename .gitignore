@@ -6,13 +6,6 @@ errors.log
 wordlist.csv
 analyzed.txt
 unanalyzed.txt
-import_test.py
-lexemes.txt
-paradigms.txt
-bad_analyses.txt
-derivations.txt
-lex_rules.txt
-*.cg3
 .Python
 env/
 build/

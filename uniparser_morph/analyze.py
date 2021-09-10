@@ -24,6 +24,7 @@ class Analyzer:
         self.conversionFile = 'stem_conversions.txt'
         self.cliticFile = 'clitics.txt'
         self.delAnaFile = 'bad_analyses.txt'
+        self.categoriesFile = 'categories.json'
         self.freqListFile = 'wordlist.csv'
         self.freqListSeparator = '\t'
         self.parserVerbosity = 0
@@ -74,12 +75,16 @@ class Analyzer:
         conversionFiles = self.collect_filenames(self.conversionFile)
         cliticFiles = self.collect_filenames(self.cliticFile)
         delAnaFiles = self.collect_filenames(self.delAnaFile)
+        categoriesFiles = self.collect_filenames(self.categoriesFile)
 
         if self.parsedFile is None or len(self.parsedFile) <= 0:
             self.parsedFile = self.freqListFile + '-parsed.txt'
         if self.unparsedFile is None or len(self.unparsedFile) <= 0:
             self.unparsedFile = self.freqListFile + '-unparsed.txt'
 
+        n = self.g.load_categories(categoriesFiles)
+        if verbose:
+            print('Categories for', n, 'tags loaded.')
         n = self.g.load_stem_conversions(conversionFiles)
         if verbose:
             print(n, 'stem conversions loaded.')
@@ -231,6 +236,99 @@ class Analyzer:
             else:
                 analyses[i] = analyses[i].to_json(glossing=self.glossing)
 
+    def gramm_to_conll(self, objAna):
+        pos = ''
+        gramm = ''
+        if type(objAna['gramm']) == dict:
+            # categories.json was used
+            if 'pos' in objAna['gramm']:
+                pos = objAna['gramm']['pos']
+                del objAna['gramm']['pos']
+            elif 'POS' in objAna['gramm']:
+                pos = objAna['gramm']['POS']
+                del objAna['gramm']['POS']
+            gramm = '|'.join(k + '=' + v for k, v in objAna['gramm'].items())
+        else:
+            gramm = ','.join(tag for tag in sorted(objAna['gramm']))
+        return pos, gramm
+
+    def analyses_to_conll(self, analyses):
+        """
+        Return a CoNLL-like representation of the analysis. Each token occupies
+        one line, different annotation types go into different columns.
+        Sentences are separated by blank lines.
+        Only works if analyses contains either one word (list of Wordform objects),
+        or one sentence (list of words), or a list of sentences.
+        If there are ambiguous analyses, their annotation values are flattened
+        and concatenated with |.
+        If categories.json was supplied, POS tags go to POS column, and all the rest
+        goes to Tags column in the form Category=Value.
+        Return analyses as one concatenated multi-line string.
+        """
+        wf = ''
+        if any(type(ana) == Wordform for ana in analyses):
+            # Analyses for one token
+            lemma = set()
+            pos = set()
+            gramm = set()
+            parts = set()
+            gloss = set()
+            for ana in analyses:
+                if type(ana) != Wordform:
+                    continue
+                wf = ana.wf.replace('\t', '\\t').replace('\n', '\\n')
+                objAna = ana.to_json(glossing=self.glossing)
+                lemma.add(objAna['lemma'])
+                if self.glossing:
+                    parts.add(objAna['wfGlossed'])
+                    gloss.add(objAna['gloss'])
+                curPos, curGramm = self.gramm_to_conll(objAna)
+                if len(curPos) > 0:
+                    pos.add(curPos)
+                gramm.add(curGramm)
+                if 'subwords' in objAna:
+                    for sw in objAna['subwords']:
+                        lemma.add(sw['lemma'])
+                        curPos, curGramm = self.gramm_to_conll(sw)
+                        if len(curPos) > 0:
+                            pos.add(curPos)
+                        gramm.add(curGramm)
+            lemma = '|'.join(l for l in sorted(lemma)).replace('\t', '\\t').replace('\n', '\\n')
+            pos = '|'.join(l for l in sorted(pos)).replace('\t', '\\t').replace('\n', '\\n')
+            gramm = ' | '.join(l for l in sorted(gramm)).replace('\t', '\\t').replace('\n', '\\n')
+            if len(lemma) <= 0:
+                lemma = '_'
+            if len(pos) <= 0:
+                pos = '_'
+            if len(gramm) <= 0:
+                gramm = '_'
+            if self.glossing:
+                parts = '|'.join(l for l in sorted(parts)).replace('\t', '\\t').replace('\n', '\\n')
+                gloss = '|'.join(l for l in sorted(gloss)).replace('\t', '\\t').replace('\n', '\\n')
+                if len(parts) <= 0:
+                    parts = '_'
+                if len(gloss) <= 0:
+                    gloss = '_'
+            sAna = wf + '\t' + lemma + '\t' + pos + '\t' + gramm
+            if self.glossing:
+                sAna += '\t' + parts + '\t' + gloss
+            sAna += '\n'
+            return sAna
+        elif len(analyses) <= 0:
+            return ''
+        sAna = ''
+        sentIndex = 1
+        for i in range(len(analyses)):
+            if type(analyses[0]) != list or len(analyses[i]) <= 0:
+                continue
+            if type(analyses[i][0]) == Wordform:
+                sAna += str(sentIndex) + '\t' + self.analyses_to_conll(analyses[i])
+                sentIndex += 1
+            elif type(analyses[i][0]) == list:
+                sentIndex = 1
+                sAna += self.analyses_to_conll(analyses[i]) + '\n'
+        return sAna
+
     def analyze_words(self, words, cgFile='', format=None, disambiguate=True):
         """
         Analyze a single word or a (possibly nested) list of words. Return either a list of
@@ -239,6 +337,7 @@ class Analyzer:
         If format is None, the analyses are Wordform objects.
         If format == 'xml', the analyses for each word are united into an XML string.
         If format == 'json', the analyses are JSON objects (dictionaries).
+        If format == 'conll', the result is one multi-line CoNLL-like string.
         Perform CG3 disambiguation if disambiguate == True and there is a CG3 file.
         """
         analyses = self.analyze_words_nodisamb(words)
@@ -248,4 +347,6 @@ class Analyzer:
             self.analyses_to_xml(analyses)
         elif format == 'json':
             self.analyses_to_json(analyses)
+        elif format == 'conll':
+            analyses = self.analyses_to_conll(analyses)
         return analyses
