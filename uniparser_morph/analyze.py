@@ -33,11 +33,11 @@ class Analyzer:
         self.parsedFile = 'analyzed.txt'
         self.unparsedFile = 'unanalyzed.txt'
         self.glossing = True
-        self.complexWfAsBag = False
         self.xmlOutput = True
         self.partialCompile = True
         self.minFlexLen = 4
         self.maxCompileTime = 60
+        self.flattenSubwords = False
 
     def collect_filenames(self, s):
         """
@@ -67,7 +67,7 @@ class Analyzer:
         self.g.PARTIAL_COMPILE = self.partialCompile
         self.g.MIN_FLEX_LENGTH = self.minFlexLen
         self.g.MAX_COMPILE_TIME = self.maxCompileTime
-        self.g.complexWfAsBag = self.complexWfAsBag
+        self.g.COMPLEX_WF_AS_BAGS = self.flattenSubwords
         paradigmFiles = self.collect_filenames(self.paradigmFile)
         lexFiles = self.collect_filenames(self.lexFile)
         lexRulesFiles = self.collect_filenames(self.lexRulesFile)
@@ -134,6 +134,7 @@ class Analyzer:
         of analyzed and unanalyzed words. Use default filenames if none are
         specified as arguments. Return some statistics.
         """
+        self.g.COMPLEX_WF_AS_BAGS = self.flattenSubwords
         if freqListFile is None:
             freqListFile = self.freqListFile
         if parsedFile is None:
@@ -175,6 +176,7 @@ class Analyzer:
         or a list with a single Wordform object that has only the wf
         property filled. Assume the parser has already been initialized.
         """
+        self.g.COMPLEX_WF_AS_BAGS = self.flattenSubwords
         analyses = self.m.parse(word.lower())
         if len(analyses) <= 0:
             analyses = [Wordform(self.g, wf=word)]

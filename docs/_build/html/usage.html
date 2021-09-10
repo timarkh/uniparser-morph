@@ -56,7 +56,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="n">ana</span><span class="o">.</span><span class="n">wf</span><span class="p">,</span> <span class="n">ana</span><span class="o">.</span><span class="n">lemma</span><span class="p">,</span> <span class="n">ana</span><span class="o">.</span><span class="n">gramm</span><span class="p">,</span> <span class="n">ana</span><span class="o">.</span><span class="n">gloss</span><span class="p">)</span>
 
 <span class="c1"># You can also pass lists (even nested lists) and specify</span>
-<span class="c1"># output format (&#39;xml&#39; or &#39;json&#39;)</span>
+<span class="c1"># output format (&#39;xml&#39;, &#39;json&#39; or &#39;conll&#39;)</span>
 <span class="c1"># If you pass a list, you will get a list of analyses with the same structure</span>
 
 <span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([[</span><span class="s1">&#39;А&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;тонэ&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]],</span>
@@ -70,6 +70,26 @@
 <span class="c1"># format=&#39;json&#39; means you will get a list of dictionaries</span>
 <span class="c1"># such as {&#39;lemma&#39;: ..., &#39;gramm&#39;: [...], ...}</span>
 <span class="c1"># for each token instead of a list of Wordform objects</span>
+
+<span class="n">analyses</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">analyze_words</span><span class="p">([[</span><span class="s1">&#39;А&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Мон&#39;</span><span class="p">,</span> <span class="s1">&#39;морфологиез&#39;</span><span class="p">,</span> <span class="s1">&#39;яратӥсько&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]],</span>
+                           <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;conll&#39;</span><span class="p">)</span>
+<span class="c1"># format=&#39;conll&#39; means you will get a CoNLL-like string.</span>
+<span class="c1"># If you want this, you have to pass either a single token,</span>
+<span class="c1"># or a list of tokens (sentence), or a list of sentences.</span>
+<span class="c1"># Each token will be analyzed on a separate line with</span>
+<span class="c1"># tab-delimited values. The columns include word position</span>
+<span class="c1"># (if you passed one or more sentences), word form, lemma,</span>
+<span class="c1"># POS (if you have a categories file), other grammatical tags,</span>
+<span class="c1"># as well as segmented word and gloss, if glossing is enabled.</span>
+<span class="c1"># Ambiguous analyses are flattened: lemma etc. are joined by |.</span>
+<span class="c1">#</span>
+<span class="c1"># Here is an example of what you can get:</span>
+<span class="c1"># 1     А       а       PART|CNJ        _       а       STEM</span>
+<span class="c1">#</span>
+<span class="c1"># 1     Мон     мон     PRO     Case=nom|Number=sg      мон     STEM</span>
+<span class="c1"># 2     морфологиез     морфология      N       Number=sg|Case=acc | Number=sg|Case=nom|Poss=3sg        морфологи-ез    STEM-ACC|STEM-P.3SG</span>
+<span class="c1"># 3     яратӥсько       яратыны V       Person=1|Number=sg|Tense=prs | Voice=pass|Person=1|Number=sg|Tense=fut | Voice=pass|Person=3|Number=pl|Tense=prs | Voice=pass|Person=3|Number=pl|Tense=prs|Negation=neg ярат-ӥськ-о|ярат-ӥсько  STEM-PASS-FUT|STEM-PASS-PRS.3PL|STEM-PRS.12</span>
+<span class="c1"># 4     .       _       _       _       _       _</span>
 </pre></div>
 </div>
 </div>
@@ -100,7 +120,7 @@
 </div>
 <div class="section" id="settings">
 <span id="id1"></span><h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h2>
-<p>If you want to use some non-default parameter values, you can assign a value to one of the properties <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> instance or, in some cases, pass a named argument to a function yuo call. These are the most important properties:</p>
+<p>If you want to use some non-default parameter values, you can assign a value to one of the properties <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> instance or, in some cases, pass a named argument to a function you call. These are the most important properties:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">lexFile</span></code>: name of the <a class="reference internal" href="lexemes.html"><span class="doc">lexicon file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">lexemes.txt</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">paradigmFile</span></code>: name of the <a class="reference internal" href="paradigms.html"><span class="doc">paradigms file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">paradigms.txt</span></code>.</p></li>
@@ -109,6 +129,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">derivFile</span></code>: name of the <a class="reference internal" href="derivations.html"><span class="doc">derivations file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">derivations.txt</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cliticFile</span></code>: name of the <a class="reference internal" href="clitics.html"><span class="doc">clitics file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">clitics.txt</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">conversionFile</span></code>: name of the <a class="reference internal" href="stem_conversions.html"><span class="doc">stem conversion file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">stem_conversions.txt</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">categoriesFile</span></code>: name of the <a class="reference internal" href="categories.html"><span class="doc">categories file</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">categories.json</span></code>.</p></li>
 </ul>
 <p>The parameters above can be assigned strings with file names or folder names. In the latter case, all <code class="docutils literal notranslate"><span class="pre">.txt</span></code> files in the folder are concatenated to form the list of lexemes, paradigms, etc.</p>
 <p>The next parameters are used when <code class="docutils literal notranslate"><span class="pre">analyze_wordlist()</span></code> is called and can also be passed to it as named arguments:</p>
@@ -121,6 +142,7 @@
 <p>Finally, there are parameters that influence what is done during parsing:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">glossing</span></code>: Boolean value that determines whether the analyses should contain attributes for glosses and morpheme breaks. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flattenSubwords</span></code>: Boolean value that determines whether the analyses of incorporated words (e.g. morphemes with <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tags) should be concatenated with the analyses of hosts. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, e.g. a token that contains a host with the lemma <code class="docutils literal notranslate"><span class="pre">A</span></code> and a clitic with the lemma <code class="docutils literal notranslate"><span class="pre">B</span></code> will be lemmatized as <code class="docutils literal notranslate"><span class="pre">A+B</span></code>.</p></li>
 </ul>
 </div>
 </div>
@@ -154,6 +176,7 @@
 <li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="categories.html">categories.json</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
 </ul>
 

@@ -8,7 +8,8 @@ class Wordform:
     rxLexTagOtherField = re.compile('^([^=]+)=(.*)')
     propertyFields = wfPropertyFields
     printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'lex2', 'gramm2',
-                            'trans_ru2', 'trans_en2', 'trans_de2', 'root'}
+                            'trans_ru2', 'trans_en2', 'trans_de2', 'root', 'stamm',
+                            'id', 'sem', 'sem2'}
     verbosity = 0
     
     def __init__(self, g, sublex=None, flex=None, wf=None, errorHandler=None):
@@ -48,7 +49,6 @@ class Wordform:
         self.build_value(sublex, flex)
         self.add_lemma(sublex.lex, flex)
         self.add_other_data(sublex.lex, flex)
-        self.otherData = copy.deepcopy(sublex.lex.otherData)
 
     def raise_error(self, message, data=None):
         if self.errorHandler is not None:
@@ -90,6 +90,21 @@ class Wordform:
     def add_other_data(self, lex, flex):
         if flex.keepOtherData:
             self.otherData = copy.deepcopy(lex.otherData)
+        if flex.otherData is not None:
+            for k, v in flex.otherData:
+                if k not in Wordform.printableOtherFields or len(v) <= 0:
+                    continue
+                bFound = False
+                for i in range(len(self.otherData)):
+                    if self.otherData[i][0] != k:
+                        continue
+                    bFound = True
+                    if k == 'id':
+                        self.otherData[i] = ('id', ','.join(_ for _ in sorted(set(self.otherData[i][1].split(',')) | set(v.split(',')))))
+                    else:
+                        self.otherData[i] = (self.otherData[i][0], self.otherData[i][1] + '; ' + v)
+                if not bFound:
+                    self.otherData.append((k, v))
 
     def expand_lex_morphs(self):
         """

@@ -168,7 +168,7 @@ A lexeme in :doc:`the vocabulary </lexemes>` can have multiple stem allomorphs s
 
 If a lexeme has only one stem, then these constraints do not have any effect. However if it has more than one stem, then it has to have a stem for each stem number referenced in the paradigm(s) it links to. E.g. if a paradigm has a morpheme that starts with ``<3>``, but a lexeme that links to it has less than 4 stems, that may lead to a parsing error.
 
-If there is no stem constraints in a morpheme, it can attach to any stem.
+If there are no stem constraints in a morpheme, it can attach to any stem.
 
 Whenever two morphemes from different paradigms are combined (see above), the resulting morpheme gets the intersection of their stem constraints. For example::
 
@@ -188,3 +188,59 @@ Sometimes it is convenient to put certain stem characters into the paradigm. For
    gramm: gen,sg
    gloss: GEN.SG
 
+Incorporated words
+^^^^^^^^^^^^^^^^^^
+
+There are no tools for handling productive incorporation yet in ``uniparser-morph``. Nevertheless, some incorporation can be accounted for in the paradigms. That can work if you have a limited number of words, e.g. pronominal clitics, that can be incorporated or orthographically fused with other words (hosts). Such words can be described as morphemes with a special ``LEX`` tag. Units with a ``LEX`` tag are processed as ordinary morphemes during parsing, but a separate "subword" analysis is added for each of them as one of the postprocessing steps. A ``LEX`` tag should look like ``LEX:xxx:yyy``, where ``xxx`` is the lemma and ``yyy`` contains grammatical tags separated by a semicolon. (A semicolon is used so that a morpheme can have both ``LEX`` tags and regular tags, which are separated by a comma.)
+
+Here is an example from Albanian::
+
+ -paradigm: imper-act-pl-consonant
+  -flex: .<.>ni
+   gramm: 2,pl,imp,act
+   gloss: IMP.2PL
+   paradigm: IO_clitics_consonant
+ 
+ -paradigm: IO_clitics_consonant
+  -flex: .më.
+   gramm: LEX:më:CLIT_PRO;gen_dat;1sg
+   gloss: 1SG.GENDAT
+  -flex: .na.
+   gramm: LEX:na:CLIT_PRO;acc;1pl
+   gloss: 1PL.ACC
+  ...
+
+These two paradigms describe a plural imperative form, where the suffix ``ni`` may be preceded by one of the object intraclitics, such as ``më`` (1sg genitive/dative). The form ``tregomëni`` 'show me' will be analyzed as follows by default (assuming JSON representation is used):
+
+.. code-block:: javascript
+  :linenos:
+    
+    {
+        "wf": "tregomëni",
+        "lemma": "tregoj",
+        "gramm": "V,imp,act,2,pl",
+        "wfGlossed": "trego-më-ni",
+        "gloss": "show-1SG.GENDAT-IMP.2PL",
+        "subwords":
+        [
+            {
+                "wf": "",
+                "lex": "më",
+                "gramm": "CLIT_PRO,gen_dat,1sg"
+            }
+        ]
+    }
+
+This is how the same output looks in XML:
+
+.. code-block:: xml
+
+ <w><ana lex="tregoj" gr="V,imp,act,2,pl" parts="trego-më-ni" gloss="show-1SG.GENDAT-IMP.2PL"></ana><ana lex="më" gr="CLIT_PRO,gen_dat,1sg"></ana>tregomëni</w>
+
+If you would like to avoid nested structures and flatten the analyses, set the ``flattenSubwords`` property of your ``Analyzer`` instance to ``True``. This is what you will get for the same example in that case:
+
+.. code-block:: xml
+
+ <w><ana lex="tregoj+më" gr="V,imp,act,2,pl,CLIT_PRO,gen_dat,1sg" parts="trego-më-ni" gloss="show-1SG.GENDAT-IMP.2PL"></ana>tregomëni</w>
+
+If you want the incorporated lexeme to be annotated with additional key-value pairs, you can add them to its tags as ``Key=Value`` strings, e.g.: ``LEX:më:CLIT_PRO;gen_dat;1sg;trans_en=I``.

@@ -192,7 +192,7 @@
 </pre></div>
 </div>
 <p>If a lexeme has only one stem, then these constraints do not have any effect. However if it has more than one stem, then it has to have a stem for each stem number referenced in the paradigm(s) it links to. E.g. if a paradigm has a morpheme that starts with <code class="docutils literal notranslate"><span class="pre">&lt;3&gt;</span></code>, but a lexeme that links to it has less than 4 stems, that may lead to a parsing error.</p>
-<p>If there is no stem constraints in a morpheme, it can attach to any stem.</p>
+<p>If there are no stem constraints in a morpheme, it can attach to any stem.</p>
 <p>Whenever two morphemes from different paradigms are combined (see above), the resulting morpheme gets the intersection of their stem constraints. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;.</span><span class="n">a</span><span class="o">&lt;.&gt;</span> <span class="o">+</span> <span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;.</span><span class="n">ab</span>
 <span class="o">&lt;</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">&gt;.</span><span class="n">a</span><span class="o">&lt;.&gt;</span> <span class="o">+</span> <span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;.</span><span class="n">b</span> <span class="o">=</span> <span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;.</span><span class="n">ab</span>
@@ -211,6 +211,68 @@
   <span class="n">gloss</span><span class="p">:</span> <span class="n">GEN</span><span class="o">.</span><span class="n">SG</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="incorporated-words">
+<h3>Incorporated words<a class="headerlink" href="#incorporated-words" title="Permalink to this headline">¶</a></h3>
+<p>There are no tools for handling productive incorporation yet in <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code>. Nevertheless, some incorporation can be accounted for in the paradigms. That can work if you have a limited number of words, e.g. pronominal clitics, that can be incorporated or orthographically fused with other words (hosts). Such words can be described as morphemes with a special <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tag. Units with a <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tag are processed as ordinary morphemes during parsing, but a separate “subword” analysis is added for each of them as one of the postprocessing steps. A <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tag should look like <code class="docutils literal notranslate"><span class="pre">LEX:xxx:yyy</span></code>, where <code class="docutils literal notranslate"><span class="pre">xxx</span></code> is the lemma and <code class="docutils literal notranslate"><span class="pre">yyy</span></code> contains grammatical tags separated by a semicolon. (A semicolon is used so that a morpheme can have both <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tags and regular tags, which are separated by a comma.)</p>
+<p>Here is an example from Albanian:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">paradigm</span><span class="p">:</span> <span class="n">imper</span><span class="o">-</span><span class="n">act</span><span class="o">-</span><span class="n">pl</span><span class="o">-</span><span class="n">consonant</span>
+ <span class="o">-</span><span class="n">flex</span><span class="p">:</span> <span class="o">.&lt;.&gt;</span><span class="n">ni</span>
+  <span class="n">gramm</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span><span class="n">pl</span><span class="p">,</span><span class="n">imp</span><span class="p">,</span><span class="n">act</span>
+  <span class="n">gloss</span><span class="p">:</span> <span class="n">IMP</span><span class="o">.</span><span class="mi">2</span><span class="n">PL</span>
+  <span class="n">paradigm</span><span class="p">:</span> <span class="n">IO_clitics_consonant</span>
+
+<span class="o">-</span><span class="n">paradigm</span><span class="p">:</span> <span class="n">IO_clitics_consonant</span>
+ <span class="o">-</span><span class="n">flex</span><span class="p">:</span> <span class="o">.</span><span class="n">më</span><span class="o">.</span>
+  <span class="n">gramm</span><span class="p">:</span> <span class="n">LEX</span><span class="p">:</span><span class="n">më</span><span class="p">:</span><span class="n">CLIT_PRO</span><span class="p">;</span><span class="n">gen_dat</span><span class="p">;</span><span class="mi">1</span><span class="n">sg</span>
+  <span class="n">gloss</span><span class="p">:</span> <span class="mi">1</span><span class="n">SG</span><span class="o">.</span><span class="n">GENDAT</span>
+ <span class="o">-</span><span class="n">flex</span><span class="p">:</span> <span class="o">.</span><span class="n">na</span><span class="o">.</span>
+  <span class="n">gramm</span><span class="p">:</span> <span class="n">LEX</span><span class="p">:</span><span class="n">na</span><span class="p">:</span><span class="n">CLIT_PRO</span><span class="p">;</span><span class="n">acc</span><span class="p">;</span><span class="mi">1</span><span class="n">pl</span>
+  <span class="n">gloss</span><span class="p">:</span> <span class="mi">1</span><span class="n">PL</span><span class="o">.</span><span class="n">ACC</span>
+ <span class="o">...</span>
+</pre></div>
+</div>
+<p>These two paradigms describe a plural imperative form, where the suffix <code class="docutils literal notranslate"><span class="pre">ni</span></code> may be preceded by one of the object intraclitics, such as <code class="docutils literal notranslate"><span class="pre">më</span></code> (1sg genitive/dative). The form <code class="docutils literal notranslate"><span class="pre">tregomëni</span></code> ‘show me’ will be analyzed as follows by default (assuming JSON representation is used):</p>
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="p">{</span>
+      <span class="s2">&quot;wf&quot;</span><span class="o">:</span> <span class="s2">&quot;tregomëni&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;lemma&quot;</span><span class="o">:</span> <span class="s2">&quot;tregoj&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;gramm&quot;</span><span class="o">:</span> <span class="s2">&quot;V,imp,act,2,pl&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;wfGlossed&quot;</span><span class="o">:</span> <span class="s2">&quot;trego-më-ni&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;gloss&quot;</span><span class="o">:</span> <span class="s2">&quot;show-1SG.GENDAT-IMP.2PL&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;subwords&quot;</span><span class="o">:</span>
+      <span class="p">[</span>
+          <span class="p">{</span>
+              <span class="s2">&quot;wf&quot;</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;lex&quot;</span><span class="o">:</span> <span class="s2">&quot;më&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;gramm&quot;</span><span class="o">:</span> <span class="s2">&quot;CLIT_PRO,gen_dat,1sg&quot;</span>
+          <span class="p">}</span>
+      <span class="p">]</span>
+  <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>This is how the same output looks in XML:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;w&gt;&lt;ana</span> <span class="na">lex=</span><span class="s">&quot;tregoj&quot;</span> <span class="na">gr=</span><span class="s">&quot;V,imp,act,2,pl&quot;</span> <span class="na">parts=</span><span class="s">&quot;trego-më-ni&quot;</span> <span class="na">gloss=</span><span class="s">&quot;show-1SG.GENDAT-IMP.2PL&quot;</span><span class="nt">&gt;&lt;/ana&gt;&lt;ana</span> <span class="na">lex=</span><span class="s">&quot;më&quot;</span> <span class="na">gr=</span><span class="s">&quot;CLIT_PRO,gen_dat,1sg&quot;</span><span class="nt">&gt;&lt;/ana&gt;</span>tregomëni<span class="nt">&lt;/w&gt;</span>
+</pre></div>
+</div>
+<p>If you would like to avoid nested structures and flatten the analyses, set the <code class="docutils literal notranslate"><span class="pre">flattenSubwords</span></code> property of your <code class="docutils literal notranslate"><span class="pre">Analyzer</span></code> instance to <code class="docutils literal notranslate"><span class="pre">True</span></code>. This is what you will get for the same example in that case:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;w&gt;&lt;ana</span> <span class="na">lex=</span><span class="s">&quot;tregoj+më&quot;</span> <span class="na">gr=</span><span class="s">&quot;V,imp,act,2,pl,CLIT_PRO,gen_dat,1sg&quot;</span> <span class="na">parts=</span><span class="s">&quot;trego-më-ni&quot;</span> <span class="na">gloss=</span><span class="s">&quot;show-1SG.GENDAT-IMP.2PL&quot;</span><span class="nt">&gt;&lt;/ana&gt;</span>tregomëni<span class="nt">&lt;/w&gt;</span>
+</pre></div>
+</div>
+<p>If you want the incorporated lexeme to be annotated with additional key-value pairs, you can add them to its tags as <code class="docutils literal notranslate"><span class="pre">Key=Value</span></code> strings, e.g.: <code class="docutils literal notranslate"><span class="pre">LEX:më:CLIT_PRO;gen_dat;1sg;trans_en=I</span></code>.</p>
 </div>
 </div>
 </div>
@@ -246,6 +308,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="categories.html">categories.json</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
 </ul>
 

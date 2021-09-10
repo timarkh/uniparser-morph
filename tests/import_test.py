@@ -12,8 +12,6 @@ from uniparser_morph import Analyzer
 if __name__ == '__main__':
     a = Analyzer()
     a.load_grammar()
-    # analyses = a.analyze_words('Морфологиез')
-    # print(analyses)
 
     # Test morpheme segmentation in the stem
     analyses = a.analyze_words('котькудазгес')
@@ -45,6 +43,6 @@ if __name__ == '__main__':
     print(analyses)
     analyses = a.analyze_words(['Морфологиез', [['А'], ['Мон', 'морфологиез', 'яратӥсько', '.']]], format='conll')
     print(analyses)
-    analyses = a.analyze_words(['Морфологиез', [], [['А'], ['Мон', 'морфологиез', 'яратӥсько', '.']]],
+    analyses = a.analyze_words(['юртъёсын', [], [['А'], ['Мон', 'морфологиез', 'яратӥсько', '.']]],
                                cgFile=os.path.abspath('udmurt_disambiguation.cg3'), disambiguate=True)
     print(analyses)

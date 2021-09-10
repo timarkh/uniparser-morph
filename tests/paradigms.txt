@@ -428,6 +428,7 @@
  -flex: .ъёс<.>
   gramm: pl,LEX:ёс:PART;pl;trans_ru=мн. ч.
   gloss: PL
+  id: 3
   paradigm: Noun-case
   paradigm: Noun-case-y
   paradigm: Noun-case-ill-y
@@ -1239,6 +1240,7 @@
  -flex: .ын<.>
   gramm: ins
   gloss: INS
+  id: 2
   paradigm: Noun-case-compounding
  -flex: .ы<.>
   gramm: ill

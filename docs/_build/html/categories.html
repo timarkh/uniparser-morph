@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>categories.json &#8212; uniparser-morph 2.2.1 documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="List of examples" href="examples.html" />
+    <link rel="prev" title="lex_rules.txt" href="lex_rules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="categories-json">
+<h1>categories.json<a class="headerlink" href="#categories-json" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">categories.json</span></code> is an optional file. It can be used to classify grammatical tags into category. Category labels are strings, just as tags. For example, <code class="docutils literal notranslate"><span class="pre">N</span></code> and <code class="docutils literal notranslate"><span class="pre">V</span></code> could belong to a category called <code class="docutils literal notranslate"><span class="pre">pos</span></code>, <code class="docutils literal notranslate"><span class="pre">nom</span></code> and <code class="docutils literal notranslate"><span class="pre">acc</span></code> to <code class="docutils literal notranslate"><span class="pre">case</span></code>, and <code class="docutils literal notranslate"><span class="pre">sg</span></code> and <code class="docutils literal notranslate"><span class="pre">pl</span></code>, to <code class="docutils literal notranslate"><span class="pre">number</span></code>. You will only need that file if you want CoNLL-like output (<a class="reference internal" href="usage.html"><span class="doc">format=’conll’</span></a> when calling analysis functions).</p>
+<p><code class="docutils literal notranslate"><span class="pre">categories.json</span></code> is a dictionary. Its keys are tags and values are their categories. Here is an example:</p>
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="p">{</span>
+      <span class="s2">&quot;A&quot;</span><span class="o">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;S&quot;</span><span class="o">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;V&quot;</span><span class="o">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;acc&quot;</span><span class="o">:</span> <span class="s2">&quot;case&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;gen&quot;</span><span class="o">:</span> <span class="s2">&quot;case&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;nom&quot;</span><span class="o">:</span> <span class="s2">&quot;case&quot;</span>
+  <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>If you have <code class="docutils literal notranslate"><span class="pre">categories.json</span></code> and use <code class="docutils literal notranslate"><span class="pre">conll</span></code> formatting, this is what you get:</p>
+<ul class="simple">
+<li><p>The POS column is filled with the tag(s) that are categorized as <code class="docutils literal notranslate"><span class="pre">pos</span></code> in the file.</p></li>
+<li><p>All the rest goes to the next column as key-value pairs joined by <code class="docutils literal notranslate"><span class="pre">|</span></code>. So instead of <code class="docutils literal notranslate"><span class="pre">nom,sg</span></code> you will get something like <code class="docutils literal notranslate"><span class="pre">Case=nom|Number=sg</span></code>, provided both <code class="docutils literal notranslate"><span class="pre">nom</span></code> and <code class="docutils literal notranslate"><span class="pre">sg</span></code> are in the file.</p></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">uniparser-morph</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="format.html">Format overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lexemes.html">lexemes.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paradigms.html">paradigms.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bad_analyses.html">bad_analyses.txt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lex_rules.html">lex_rules.txt</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">categories.json</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">List of examples</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="lex_rules.html" title="previous chapter">lex_rules.txt</a></li>
+      <li>Next: <a href="examples.html" title="next chapter">List of examples</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Timofey Arkhangelskiy.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/categories.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

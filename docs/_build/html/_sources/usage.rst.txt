@@ -29,7 +29,7 @@ If you want to analyze words or sentences on the fly, call ``analyze_words()``::
 		print(ana.wf, ana.lemma, ana.gramm, ana.gloss)
 
 	# You can also pass lists (even nested lists) and specify
-	# output format ('xml' or 'json')
+	# output format ('xml', 'json' or 'conll')
 	# If you pass a list, you will get a list of analyses with the same structure
 
 	analyses = a.analyze_words([['А'], ['Мон', 'тонэ', 'яратӥсько', '.']],
@@ -43,6 +43,26 @@ If you want to analyze words or sentences on the fly, call ``analyze_words()``::
 	# format='json' means you will get a list of dictionaries
 	# such as {'lemma': ..., 'gramm': [...], ...}
 	# for each token instead of a list of Wordform objects
+
+	analyses = a.analyze_words([['А'], ['Мон', 'морфологиез', 'яратӥсько', '.']],
+	                           format='conll')
+	# format='conll' means you will get a CoNLL-like string.
+	# If you want this, you have to pass either a single token,
+	# or a list of tokens (sentence), or a list of sentences.
+	# Each token will be analyzed on a separate line with
+	# tab-delimited values. The columns include word position
+	# (if you passed one or more sentences), word form, lemma,
+	# POS (if you have a categories file), other grammatical tags,
+	# as well as segmented word and gloss, if glossing is enabled.
+	# Ambiguous analyses are flattened: lemma etc. are joined by |.
+	#
+	# Here is an example of what you can get:
+	# 1	А	а	PART|CNJ	_	а	STEM
+	# 
+	# 1	Мон	мон	PRO	Case=nom|Number=sg	мон	STEM
+	# 2	морфологиез	морфология	N	Number=sg|Case=acc | Number=sg|Case=nom|Poss=3sg	морфологи-ез	STEM-ACC|STEM-P.3SG
+	# 3	яратӥсько	яратыны	V	Person=1|Number=sg|Tense=prs | Voice=pass|Person=1|Number=sg|Tense=fut | Voice=pass|Person=3|Number=pl|Tense=prs | Voice=pass|Person=3|Number=pl|Tense=prs|Negation=neg	ярат-ӥськ-о|ярат-ӥсько	STEM-PASS-FUT|STEM-PASS-PRS.3PL|STEM-PRS.12
+	# 4	.	_	_	_	_	_
 
 Disambiguation with Constraint Grammar
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,7 +100,7 @@ When the analysis is over (which may take a while), two files will be generated 
 Settings
 --------
 
-If you want to use some non-default parameter values, you can assign a value to one of the properties ``Analyzer`` instance or, in some cases, pass a named argument to a function yuo call. These are the most important properties:
+If you want to use some non-default parameter values, you can assign a value to one of the properties ``Analyzer`` instance or, in some cases, pass a named argument to a function you call. These are the most important properties:
 
 * ``lexFile``: name of the :doc:`lexicon file </lexemes>`. Defaults to ``lexemes.txt``.
 * ``paradigmFile``: name of the :doc:`paradigms file </paradigms>`. Defaults to ``paradigms.txt``.
@@ -89,6 +109,7 @@ If you want to use some non-default parameter values, you can assign a value to 
 * ``derivFile``: name of the :doc:`derivations file </derivations>`. Defaults to ``derivations.txt``.
 * ``cliticFile``: name of the :doc:`clitics file </clitics>`. Defaults to ``clitics.txt``.
 * ``conversionFile``: name of the :doc:`stem conversion file </stem_conversions>`. Defaults to ``stem_conversions.txt``.
+* ``categoriesFile``: name of the :doc:`categories file </categories>`. Defaults to ``categories.json``.
 
 The parameters above can be assigned strings with file names or folder names. In the latter case, all ``.txt`` files in the folder are concatenated to form the list of lexemes, paradigms, etc.
 
@@ -102,3 +123,4 @@ The next parameters are used when ``analyze_wordlist()`` is called and can also 
 Finally, there are parameters that influence what is done during parsing:
 
 * ``glossing``: Boolean value that determines whether the analyses should contain attributes for glosses and morpheme breaks. Defaults to ``True``.
+* ``flattenSubwords``: Boolean value that determines whether the analyses of incorporated words (e.g. morphemes with ``LEX`` tags) should be concatenated with the analyses of hosts. Defaults to ``False``. If set to ``True``, e.g. a token that contains a host with the lemma ``A`` and a clitic with the lemma ``B`` will be lemmatized as ``A+B``.

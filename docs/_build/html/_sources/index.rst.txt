@@ -44,6 +44,7 @@ Contents
    paradigms
    bad_analyses
    lex_rules
+   categories
    examples
 
 History
