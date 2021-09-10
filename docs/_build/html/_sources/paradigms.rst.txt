@@ -188,6 +188,11 @@ Sometimes it is convenient to put certain stem characters into the paradigm. For
    gramm: gen,sg
    gloss: GEN.SG
 
+Morpheme IDs
+^^^^^^^^^^^^
+
+You can add an ``id`` field to morphemes and/or lexemes. IDs do not need to be unique and do not need to be assigned to each and every item. An analyzed word form will contain an ``id`` attribute if any of its parts had an ID. The value will contain the IDs of all its parts separated by a comma. Duplicate IDs will be truncated.
+
 Incorporated words
 ^^^^^^^^^^^^^^^^^^
 
