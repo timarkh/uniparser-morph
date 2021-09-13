@@ -73,7 +73,7 @@ class Wordform:
             if self.verbosity > 0:
                 self.raise_error('Several stems available to create the new lemma ' +
                                  flex.lemmaChanger.flex)
-        wfLemma = Wordform(suitableSubLex[0], flex.lemmaChanger,
+        wfLemma = Wordform(self.g, suitableSubLex[0], flex.lemmaChanger,
                            self.errorHandler)
         self.lemma = wfLemma.wf
 
@@ -121,7 +121,7 @@ class Wordform:
         self.gramm = self.rxLexTag.sub('', self.gramm)
         for lemma, gramm in lexTags:
             gramm = gramm.replace(';', ',')
-            lex2add = Wordform(g=self.g, wf='')
+            lex2add = Wordform(self.g, wf='')
             lex2add.lemma = lemma
             for tag in gramm.split(','):
                 m = self.rxLexTagOtherField.search(tag)
