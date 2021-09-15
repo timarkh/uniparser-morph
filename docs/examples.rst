@@ -35,6 +35,6 @@ This an incomplete list of languages for which there are open ``uniparser-morph`
 .. _Moksha: https://github.com/timarkh/uniparser-grammar-moksha
 .. _Komi Zyrian: https://github.com/timarkh/uniparser-grammar-komi-zyrian
 .. _Adyghe: https://github.com/ansorox/uniparser-grammar-adyghe
-.. _Albanian: https://bitbucket.org/timarkh/uniparser-albanian-grammar/src/master/
-.. _Urmi: https://bitbucket.org/timarkh/uniparser-grammar-urmi/src/master/
-.. _Turoyo: https://github.com/skybrod/Turoyo_noun_dict
+.. _Albanian: https://github.com/timarkh/uniparser-grammar-albanian
+.. _Urmi: https://github.com/timarkh/uniparser-grammar-urmi
+.. _Turoyo: https://github.com/margisk/uniparser-grammar-turoyo
