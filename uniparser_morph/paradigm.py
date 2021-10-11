@@ -898,9 +898,35 @@ class Paradigm:
         flexL.flexParts = cls.join_inflexion_parts(flexL.flexParts,
                                                    flexR.flexParts)
         flexL.ensure_infixes()
+        cls.join_other_data(flexL, flexR)
         flexL.rebuild_value()
         # print('Result:', flexL.flex)
         return flexL
+
+    @classmethod
+    def join_other_data(cls, flexL, flexR):
+        """
+        Add otherData values from flexR to flexL.
+        """
+        if flexR.otherData is None:
+            return
+        if flexL.otherData is None:
+            flexL.otherData = []
+        for k, v in flexR.otherData:
+            if len(v) <= 0:
+                continue
+            bFound = False
+            for i in range(len(flexL.otherData)):
+                if flexL.otherData[i][0] != k:
+                    continue
+                bFound = True
+                if k == 'id':
+                    flexL.otherData[i] = ('id', ','.join(_ for _ in sorted(set(flexL.otherData[i][1].split(','))
+                                                                           | set(v.split(',')))))
+                else:
+                    flexL.otherData[i] = (flexL.otherData[i][0], flexL.otherData[i][1] + '; ' + v)
+            if not bFound:
+                flexL.otherData.append((k, v))
 
     @staticmethod
     def stem_numbers_agree(flexL, flexR):
