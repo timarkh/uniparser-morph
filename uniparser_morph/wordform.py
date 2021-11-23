@@ -1,5 +1,6 @@
 ﻿import copy
 import re
+import xml.sax.saxutils
 from .common_functions import wfPropertyFields, check_compatibility, join_stem_flex
 
 
@@ -191,12 +192,17 @@ class Wordform:
         if sort_tags:
             gramm = ','.join(tag for tag in sorted(self.gramm.split(','))
                              if len(tag) > 0)
-        r = '<ana lex="' + lemma + '" gr="' + gramm + '"'
+        gramm = xml.sax.saxutils.quoteattr(gramm.strip())
+        lemma = xml.sax.saxutils.quoteattr(lemma.strip())
+        r = '<ana lex=' + lemma + ' gr=' + gramm
         if glossing:
-            r += ' parts="' + self.wfGlossed + '" gloss="' + self.gloss + '"'
+            wfGlossed = xml.sax.saxutils.quoteattr(self.wfGlossed.strip())
+            gloss = xml.sax.saxutils.quoteattr(self.gloss.strip())
+            r += ' parts=' + wfGlossed + ' gloss=' + gloss
         for field, value in otherData:
             if field in Wordform.printableOtherFields:
-                r += ' ' + field + '="' + value.replace('"', "'") + '"'
+                value = xml.sax.saxutils.quoteattr(value)
+                r += ' ' + field + '=' + value
         if len(self.subwords) > 0 and not self.g.COMPLEX_WF_AS_BAGS:
             return r + '></ana>' + ''.join(sw.to_xml(glossing=False, sort_tags=sort_tags)
                                            for sw in self.subwords)
