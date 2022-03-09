@@ -5821,6 +5821,7 @@
  -flex: .ыны<.>
   gramm: inf
   gloss: INF
+  std: .ны<.>
  paradigm: Comparative
 
 -paradigm: Infinitive-I-soft
@@ -5833,6 +5834,7 @@
  -flex: .ын<.>
   gramm: inf
   gloss: INF
+  std: .ыны<.>
   regex-prev: ^.*(ськ|ыл|тск|пот|пыр|лыкт|учк|усьт|ну|кошк|ортч|лу|адӟ|мын|берт|гожт|тыр|экт|ветл|бӧрд|шу|кынм)[<>.]*$
  paradigm: Comparative
 

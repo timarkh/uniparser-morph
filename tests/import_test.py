@@ -19,6 +19,12 @@ if __name__ == '__main__':
     analyses = a.analyze_words('котькуд')
     print(analyses)
 
+    # Test standard (underlying) morphemes
+    analyses = a.analyze_words('бырйыны')
+    print(analyses)
+    analyses = a.analyze_words('быръемлэсь')
+    print(analyses)
+
     # Test LEX:xxx:yyy
     analyses = a.analyze_words('юртъёсаз')
     print(analyses)

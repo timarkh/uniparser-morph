@@ -75,6 +75,9 @@ class Inflexion:
     def __init__(self, g, dictDescr, errorHandler=None):
         self.g = g
         self.flex = ''
+        self.flexStd = ''       # standardized (underlying) morphemes, if any
+        self.flexStdObj = None  # standardized morphemes as an InflexionStd object,
+                                # if different than this
         self.stemNum = None     # what stems it can attach to
         self.stemNumOut = None  # what stems the subsequent inflexions
                                 # should be able to attach to
@@ -106,10 +109,7 @@ class Inflexion:
         # The length of the inflexion can equal zero, so we don't check for it.
         if 'content' not in dictDescr or dictDescr['content'] is None:
             return
-        self.key2func = {'gramm': self.add_gramm, 'gloss': self.add_gloss,
-                         'paradigm': self.add_paradigm_link,
-                         'redupl': self.add_reduplication,
-                         'lex': self.add_lemma_changer}
+        self.key2func = self.assign_key_value_actions()
         for obj in dictDescr['content']:
             try:
                 self.key2func[obj['name']](obj)
@@ -119,10 +119,39 @@ class Inflexion:
                 else:
                     self.add_data(obj)
         self.generate_parts()
+        self.fill_std(dictDescr)
 
     def raise_error(self, message, data=None):
         if self.errorHandler is not None:
             self.errorHandler.raise_error(message, data)
+
+    def assign_key_value_actions(self):
+        key2func = {
+            'std': self.add_flex_std,
+            'gramm': self.add_gramm,
+            'gloss': self.add_gloss,
+            'paradigm': self.add_paradigm_link,
+            'redupl': self.add_reduplication,
+            'lex': self.add_lemma_changer
+        }
+        return key2func
+
+    def add_flex_std(self, obj):
+        flexStd = obj['value']
+        if type(flexStd) != str:
+            self.raise_error('Wrong underlying morphemes in ' + self.flex + ': ', flexStd)
+            return
+        self.flexStd = flexStd
+
+    def add_flex(self, obj):
+        """
+        Only used in subclasses.
+        """
+        flex = obj['value']
+        if type(flex) != str:
+            self.raise_error('Wrong morphemes in ' + self.flex + ': ', flex)
+            return
+        self.flex = flex
 
     def add_gramm(self, obj):
         gramm = obj['value']
@@ -376,6 +405,39 @@ class Inflexion:
             newFlex += curFlex
         self.flex = newFlex
 
+    def fill_std(self, dictDescr):
+        """
+        If there is a standardized (underlying) form of the inflection,
+        which is different from the surface form, store it as self.flexStdObj.
+        """
+        if len(self.flexStd) > 0:
+            self.flexStdObj = InflexionStd(self.g, dictDescr, self.errorHandler)
+
+    def copy_std(self):
+        """
+        Create a standardized (underlying) form of the inflection, which is
+        essentially equal to the current one.
+        """
+        dictDescr = {
+            'value': self.flex,
+            'content': [
+                {
+                    'name': 'gramm',
+                    'value': self.gramm
+                },
+                {
+                    'name': 'std',
+                    'value': self.flex
+                }
+            ]
+        }
+        if len(self.gloss) > 0:
+            dictDescr['content'].append({
+                'name': 'gloss',
+                'value': self.gloss
+            })
+        self.flexStdObj = InflexionStd(self.g, dictDescr, self.errorHandler)
+
     def get_length(self):
         """Return the length of the inflexion without metacharacters."""
         self.rebuild_value()
@@ -571,6 +633,8 @@ class Inflexion:
     def __str__(self):
         r = '<Inflexion object>\n'
         r += 'flex: ' + self.flex + '\n'
+        if len(self.flexStd) > 0:
+            r += 'std: ' + self.flexStd + '\n'
         r += 'gramm: ' + self.gramm + '\n'
         for iFPs in range(len(self.flexParts)):
             if len(self.flexParts) > 1:
@@ -583,6 +647,34 @@ class Inflexion:
             if len(self.subsequent) > 0:
                 r += 'links: ' + '; '.join(pl.name for pl in self.subsequent) + '\n'
         return r
+
+
+class InflexionStd(Inflexion):
+    """
+    Standardized (underlying) form of an inflection. Only used for
+    generating the standardized morpheme sequence for an analyzed word.
+    """
+
+    def __init__(self, g, dictDescr, errorHandler):
+        super().__init__(g, dictDescr, errorHandler)
+        self.flexStd = ''
+        self.flexStdObj = None
+        self.stemNum = None
+        self.stemNumOut = None
+
+    def assign_key_value_actions(self):
+        key2func = {
+            'std': self.add_flex,
+            'gramm': self.add_gramm,
+            'gloss': self.add_gloss,
+            'paradigm': self.do_nothing,
+            'redupl': self.do_nothing,
+            'lex': self.do_nothing
+        }
+        return key2func
+
+    def do_nothing(self):
+        pass
 
 
 class Paradigm:
@@ -872,6 +964,13 @@ class Paradigm:
         if not cls.join_regexes(flexL, flexR, partialCompile=partialCompile):
             return None
 
+        # If there is a standardized version of one the inflexions,
+        # make sure the other has one as well
+        if flexL.flexStdObj is not None and flexR.flexStdObj is None:
+            flexR.copy_std()
+        elif flexL.flexStdObj is None and flexR.flexStdObj is not None:
+            flexL.copy_std()
+
         # Manage links to the subsequent paradigms:
         if paradigmLink.position != POS_UNSPECIFIED:
             flexL.position = paradigmLink.position
@@ -901,6 +1000,13 @@ class Paradigm:
         cls.join_other_data(flexL, flexR)
         flexL.rebuild_value()
         # print('Result:', flexL.flex)
+
+        # If there are standardized versions of the inflexions, join them as well
+        if flexL.flexStdObj is not None and flexR.flexStdObj is not None:
+            flexL.flexStdObj = Paradigm.join_inflexions(flexL.flexStdObj,
+                                                        flexR.flexStdObj,
+                                                        paradigmLink,
+                                                        partialCompile)
         return flexL
 
     @classmethod

@@ -21,6 +21,7 @@ class Wordform:
             self.errorHandler = errorHandler
         self.wf = wf
         self.wfGlossed = ''
+        self.wfGlossedStd = ''
         self.gloss = ''
         self.lemma = ''
         self.gramm = ''
@@ -146,6 +147,10 @@ class Wordform:
         self.wf, self.wfGlossed, self.gloss = join_stem_flex(subLexStem,
                                                              sublex.gloss,
                                                              flex)
+        if flex.flexStdObj is not None:
+            wfStd, self.wfGlossedStd, glossStd = join_stem_flex(subLexStem,
+                                                                sublex.gloss,
+                                                                flex.flexStdObj)
 
     def append_subword_data(self):
         """
@@ -197,8 +202,13 @@ class Wordform:
         r = '<ana lex=' + lemma + ' gr=' + gramm
         if glossing:
             wfGlossed = xml.sax.saxutils.quoteattr(self.wfGlossed.strip())
+            wfGlossedStd = xml.sax.saxutils.quoteattr(self.wfGlossedStd.strip())
             gloss = xml.sax.saxutils.quoteattr(self.gloss.strip())
-            r += ' parts=' + wfGlossed + ' gloss=' + gloss
+            r += ' parts=' + wfGlossed
+            if len(wfGlossedStd) > 0:
+                r += ' parts_std=' + wfGlossedStd
+            r += ' gloss=' + gloss
+
         for field, value in otherData:
             if field in Wordform.printableOtherFields:
                 value = xml.sax.saxutils.quoteattr(value)
@@ -249,6 +259,8 @@ class Wordform:
         if glossing:
             r['wfGlossed'] = self.wfGlossed
             r['gloss'] = self.gloss
+            if len(self.wfGlossedStd) > 0:
+                r['wfGlossedStd'] = self.wfGlossedStd
         for field, value in otherData:
             if field in Wordform.printableOtherFields:
                 r[field] = value
@@ -278,7 +290,10 @@ class Wordform:
                 r += ','.join(tag for tag in sorted(gr.split(','))
                               if len(tag) > 0)
             r += "']\n"
-        r += self.wfGlossed + '\n'
+        wfGlossedStd = ''
+        if len(self.wfGlossedStd) > 0:
+            wfGlossedStd = ' [' + self.wfGlossedStd + ']'
+        r += self.wfGlossed + wfGlossedStd + '\n'
         r += self.gloss + '\n'
         for field, value in self.otherData:
             r += field + '\t' + str(value) + '\n'
