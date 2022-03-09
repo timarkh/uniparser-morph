@@ -119,20 +119,29 @@ class Lexeme:
         self.lexref = ''
         self.stem = ''
         self.stemIncorp = ''
+        self.stemStd = ''
         self.paradigms = []
         self.gramm = ''
         self.grammIncorp = ''
         self.gloss = ''
         self.glossIncorp = ''
+        self.sublexStd = None   # Sublexeme object for the standardized stem, if any
         self.subLexemes = []
         self.exceptions = {}    # set of tags -> ExceptionForm object
         self.otherData = []     # list of tuples (name, value)
-        self.key2func = {'lex': self.add_lemma, 'lexref': self.add_lexref,
-                         'stem': self.add_stem, 'paradigm': self.add_paradigm,
-                         'gramm': self.add_gramm, 'gloss': self.add_gloss,
-                         'except': self.add_except, 'stem-incorp': self.add_stem_incorp,
-                         'gramm-incorp': self.add_gramm_incorp,
-                         'gloss-incorp': self.add_gloss_incorp}
+        self.key2func = {
+            'lex': self.add_lemma,
+            'lexref': self.add_lexref,
+            'stem': self.add_stem,
+            'std': self.add_std,
+            'paradigm': self.add_paradigm,
+            'gramm': self.add_gramm,
+            'gloss': self.add_gloss,
+            'except': self.add_except,
+            'stem-incorp': self.add_stem_incorp,
+            'gramm-incorp': self.add_gramm_incorp,
+            'gloss-incorp': self.add_gloss_incorp
+        }
         self.errorHandler = errorHandler
         try:
             keys = set(obj['name'] for obj in dictDescr['content'])
@@ -150,6 +159,7 @@ class Lexeme:
                 self.add_data(obj)
         self.check_gloss()
         self.generate_sublexemes()
+        self.generate_sublexeme_std()
 
     def raise_error(self, message, data=None):
         if self.errorHandler is not None:
@@ -161,7 +171,7 @@ class Lexeme:
             return ''
         key = obj['name']
         try:
-            order = ['lex', 'lexref', 'stem', 'paradigm', 'gramm',
+            order = ['lex', 'lexref', 'stem', 'std', 'paradigm', 'gramm',
                      'gloss'].index(key)
             return '!' + str(order)
         except ValueError:
@@ -203,6 +213,18 @@ class Lexeme:
         if len(self.stem) > 0:
             self.raise_error('Duplicate stem in ' + self.lemma + ': ', stem)
         self.stem = stem
+
+    def add_std(self, obj):
+        """
+        Add a standardized (underlying) variant of the stem.
+        """
+        stemStd = obj['value']
+        if type(stemStd) != str or len(stemStd) <= 0:
+            self.raise_error('Wrong standardized stem in ' + self.lemma + ': ', stemStd)
+            return
+        if len(self.stemStd) > 0:
+            self.raise_error('Duplicate standardized stem in ' + self.lemma + ': ', stemStd)
+        self.stemStd = stemStd
 
     def add_stem_incorp(self, obj):
         stemIncorp = obj['value']
@@ -384,8 +406,10 @@ class Lexeme:
         return [part.split(sepVars) for part in s.split(sepParts)]
 
     def generate_stems(self, stems):
-        """Fill in the gaps in the stems description with the help of
-        automatic stem conversion."""
+        """
+        Fill in the gaps in the stems description with the help of
+        automatic stem conversion.
+        """
         stemConversionNames = set(t[1] for t in self.otherData
                                   if t[0] == 'conversion-link')
         for scName in stemConversionNames:
@@ -394,9 +418,20 @@ class Lexeme:
             except KeyError:
                 self.raise_error('No stem conversion named ' + scName)
 
+    def generate_sublexeme_std(self):
+        """
+        Generate a sublexeme object for the standardized stem, if any.
+        """
+        if len(self.stemStd) > 0:
+            self.sublexStd = SubLexeme(0, self.stemStd, '', '', '', self)
+        else:
+            self.sublexStd = None
+
     def generate_redupl_paradigm(self):
-        """Create new paradigms with reduplicated parts of this particular
-        lexeme or change the references if they already exist."""
+        """
+        Create new paradigms with reduplicated parts of this particular
+        lexeme or change the references if they already exist.
+        """
         if len(self.g.paradigms) <= 0:
             self.raise_error('Paradigms must be loaded before lexemes.')
             return
@@ -408,9 +443,11 @@ class Lexeme:
             sl.paradigm = paraReduplName
 
     def generate_regex_paradigm(self):
-        """Create new paradigms where all inflexions with regexes that
+        """
+        Create new paradigms where all inflexions with regexes that
         don't match to the particular stem of this lexeme are deleted
-        or change the references if they already exist."""
+        or change the references if they already exist.
+        """
         if len(self.g.paradigms) <= 0:
             self.raise_error('Paradigms must be loaded before lexemes.')
             return
@@ -422,7 +459,9 @@ class Lexeme:
             sl.paradigm = paraRegexName
 
     def generate_wordforms(self):
-        """Generate a list of all possible wordforms with this lexeme."""
+        """
+        Generate a list of all possible wordforms with this lexeme.
+        """
         if len(self.g.paradigms) <= 0:
             self.raise_error('Paradigms must be loaded before lexemes.')
             return
@@ -440,7 +479,9 @@ class Lexeme:
         return wordforms
 
     def add_derivations(self):
-        """Add sublexemes with links to derivations."""
+        """
+        Add sublexemes with links to derivations.
+        """
         subLexemes2add = []
         for sl in self.subLexemes:
             derivName = '#deriv#paradigm#' + sl.paradigm

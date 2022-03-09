@@ -147,10 +147,20 @@ class Wordform:
         self.wf, self.wfGlossed, self.gloss = join_stem_flex(subLexStem,
                                                              sublex.gloss,
                                                              flex)
-        if flex.flexStdObj is not None:
-            wfStd, self.wfGlossedStd, glossStd = join_stem_flex(subLexStem,
+        if flex.flexStdObj is not None or sublex.lex.sublexStd is not None:
+            if sublex.lex.sublexStd is not None:
+                subLexStemStd = sublex.lex.sublexStd.stemParts
+            else:
+                subLexStemStd = sublex.stemParts
+            if flex.startWithSelf and not subLexStemStd.startswith('.'):
+                subLexStemStd = '.' + subLexStemStd
+            if flex.flexStdObj is not None:
+                flexStd = flex.flexStdObj
+            else:
+                flexStd = flex
+            wfStd, self.wfGlossedStd, glossStd = join_stem_flex(subLexStemStd,
                                                                 sublex.gloss,
-                                                                flex.flexStdObj)
+                                                                flexStd)
 
     def append_subword_data(self):
         """
