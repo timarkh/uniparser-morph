@@ -109,7 +109,7 @@ Here 11 affixes, each occupying its own slot, combine with the stem to produce t
 Standardized (underlying) form of morphemes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you enable glossing, ``uniparser-morph`` splits your word into parts, so that each morpheme has to be its substring. However, sometimes it is convenient to provide standardized or "underlying" forms of morphemes when glossing. This can make sense if morphemes in your language undergo phonological processes and thus can have many surface forms. If you want a stem or an affix have a standardized form, add an ``std`` field to its description. Note that its value should have the same structure (i.e. contain the same dots and other special sequences) as the corresponding stem or affix. Here the usage of the ``std`` field can be seen in a couple of Udmurt examples::
+If you enable glossing, ``uniparser-morph`` splits your word into parts, so that each morpheme has to be its substring. However, sometimes it is convenient to provide standardized or "underlying" forms of morphemes when glossing. This can make sense if morphemes in your language undergo phonological processes and thus can have many surface forms. If you want a stem or an affix to have a standardized form, add an ``std`` field to its description. Note that its value should have the same structure (i.e. contain the same dots and other special sequences) as the corresponding stem or affix. Here the usage of the ``std`` field can be seen in a couple of Udmurt examples::
 
     -lexeme
      lex: бырйыны
