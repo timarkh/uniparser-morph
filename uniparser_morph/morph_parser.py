@@ -2,7 +2,7 @@ import re
 import copy
 import time
 from .common_functions import GLOSS_EMPTY, GLOSS_STEM, GLOSS_STEM_FORCED, GLOSS_STARTWITHSELF, POS_NONFINAL
-from .paradigm import Paradigm
+from .paradigm import Paradigm, Inflexion
 from .wordform import Wordform
 from .clitic import SIDE_ENCLITIC, SIDE_PROCLITIC, SIDE_OTHER
 from .morph_fst import MorphFST
@@ -740,12 +740,13 @@ class Parser:
                 elif cl.is_compatible(wf):
                     wf.wf = word
                     # Lemma
-                    wf.add_to_field('lemma', cl.lemma)
-                    # Grammatical tags
-                    wf.add_to_field('gramm', cl.gramm)
+                    wf.add_lemma(cl, Inflexion(self.g, {}))
+                    # Grammatical tags, if present
+                    infl = Inflexion(g=self.g, dictDescr={"name": "flex", "value":"", "content": [{"name": "gramm", "value": cl.gramm}]}, errorHandler=self.errorHandler)
+                    wf.add_gramm(cl, infl)
                     # Additional fields
-                    for field, value in cl.otherData.items():
-                        wf.add_to_field(field, value)
+                    for field, value in cl.otherData:
+                        wf.add_other_data(cl, infl)
                     # Gloss
                     if cl.side == SIDE_PROCLITIC:
                         wf.gloss = cl.gloss + '=' + wf.gloss
