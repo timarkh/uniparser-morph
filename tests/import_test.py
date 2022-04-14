@@ -18,6 +18,8 @@ if __name__ == '__main__':
     print(analyses)
     analyses = a.analyze_words('котькуд')
     print(analyses)
+    analyses = a.analyze_words('котькудhkao')
+    print(analyses)
 
     # Test standard (underlying) morphemes
     analyses = a.analyze_words('бырйыны')

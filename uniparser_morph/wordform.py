@@ -61,7 +61,7 @@ class Wordform:
             if self.lemma == "":
                 self.lemma = lex.lemma
             elif lex.lemma != "":
-                self.lemma += ","+lex.lemma
+                self.lemma += "+"+lex.lemma
             return
         suitableSubLex = [sl for sl in lex.subLexemes
                           if flex.lemmaChanger.stemNum is None or
@@ -87,8 +87,13 @@ class Wordform:
         if not flex.replaceGrammar:
             if self.gramm == "":
                 self.gramm = sublex.gramm
-            if len(sublex.gramm) > 0 and len(flex.gramm) > 0:
-                self.gramm += ','
+            if len(self.gramm) > 0 and len(flex.gramm) > 0:
+                # Avoid repeated tags
+                selfGramm = set(self.gramm.split(','))
+                flex.gramm = ','.join(gr for gr in flex.gramm.split(',')
+                                      if gr not in selfGramm)
+                if len(flex.gramm) > 0:
+                    self.gramm += ','
             self.gramm += flex.gramm
         else:
             self.gramm = flex.gramm

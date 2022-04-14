@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>paradigms.txt &#8212; uniparser-morph 2.2.1 documentation</title>
+    <title>paradigms.txt &#8212; uniparser-morph 2.4.3 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -216,8 +216,20 @@
 <h3>Morpheme IDs<a class="headerlink" href="#morpheme-ids" title="Permalink to this headline">¶</a></h3>
 <p>You can add an <code class="docutils literal notranslate"><span class="pre">id</span></code> field to morphemes and/or lexemes. IDs do not need to be unique and do not need to be assigned to each and every item. An analyzed word form will contain an <code class="docutils literal notranslate"><span class="pre">id</span></code> attribute if any of its parts had an ID. The value will contain the IDs of all its parts separated by a comma. Duplicate IDs will be truncated.</p>
 </div>
-<div class="section" id="incorporated-words">
-<h3>Incorporated words<a class="headerlink" href="#incorporated-words" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="clitics">
+<h3>Clitics<a class="headerlink" href="#clitics" title="Permalink to this headline">¶</a></h3>
+<p>Clitics spelled as one graphic word with their hosts can either be handled with a <a class="reference internal" href="clitics.html"><span class="doc">clitics.txt file</span></a> or described together with the morphemes. The <a class="reference internal" href="clitics.html"><span class="doc">clitics.txt</span></a> mechanism is rather simplistic and only allows you to chop single clitics at the edges of a word. More complicated stuff, such as intraclitics or clitics that have their own inflection, is easier to describe as morphemes. If you use glossing, you will probably want them to be separated by <code class="docutils literal notranslate"><span class="pre">=</span></code> rather than <code class="docutils literal notranslate"><span class="pre">-</span></code> from the neighboring morphemes. Add a <code class="docutils literal notranslate"><span class="pre">sep</span></code> attribute to the description to enable this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">paradigm</span><span class="p">:</span> <span class="n">IO_clitics_consonant</span>
+ <span class="o">-</span><span class="n">flex</span><span class="p">:</span> <span class="o">.</span><span class="n">më</span><span class="o">.</span>
+  <span class="n">gramm</span><span class="p">:</span> <span class="n">CLIT_PRO</span><span class="p">,</span><span class="n">gen_dat</span><span class="p">,</span><span class="mi">1</span><span class="n">sg</span>
+  <span class="n">gloss</span><span class="p">:</span> <span class="mi">1</span><span class="n">SG</span><span class="o">.</span><span class="n">GENDAT</span>
+  <span class="n">sep</span><span class="p">:</span> <span class="o">=</span>
+</pre></div>
+</div>
+<p>If your clitic consists of multiple parts, the <code class="docutils literal notranslate"><span class="pre">=</span></code> separator will only appear before the leftmost non-empty part and after the rightmost non-empty part. It is impossible to have both clitics and normal affixes in a single <code class="docutils literal notranslate"><span class="pre">flex</span></code> object description.</p>
+</div>
+<div class="section" id="incorporated-words-and-intraclitics">
+<h3>Incorporated words and intraclitics<a class="headerlink" href="#incorporated-words-and-intraclitics" title="Permalink to this headline">¶</a></h3>
 <p>There are no tools for handling productive incorporation yet in <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code>. Nevertheless, some incorporation can be accounted for in the paradigms. That can work if you have a limited number of words, e.g. pronominal clitics, that can be incorporated or orthographically fused with other words (hosts). Such words can be described as morphemes with a special <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tag. Units with a <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tag are processed as ordinary morphemes during parsing, but a separate “subword” analysis is added for each of them as one of the postprocessing steps. A <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tag should look like <code class="docutils literal notranslate"><span class="pre">LEX:xxx:yyy</span></code>, where <code class="docutils literal notranslate"><span class="pre">xxx</span></code> is the lemma and <code class="docutils literal notranslate"><span class="pre">yyy</span></code> contains grammatical tags separated by a semicolon. (A semicolon is used so that a morpheme can have both <code class="docutils literal notranslate"><span class="pre">LEX</span></code> tags and regular tags, which are separated by a comma.)</p>
 <p>Here is an example from Albanian:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">paradigm</span><span class="p">:</span> <span class="n">imper</span><span class="o">-</span><span class="n">act</span><span class="o">-</span><span class="n">pl</span><span class="o">-</span><span class="n">consonant</span>
@@ -237,21 +249,21 @@
 </pre></div>
 </div>
 <p>These two paradigms describe a plural imperative form, where the suffix <code class="docutils literal notranslate"><span class="pre">ni</span></code> may be preceded by one of the object intraclitics, such as <code class="docutils literal notranslate"><span class="pre">më</span></code> (1sg genitive/dative). The form <code class="docutils literal notranslate"><span class="pre">tregomëni</span></code> ‘show me’ will be analyzed as follows by default (assuming JSON representation is used):</p>
-<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="p">{</span>
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="p">{</span>
       <span class="s2">&quot;wf&quot;</span><span class="o">:</span> <span class="s2">&quot;tregomëni&quot;</span><span class="p">,</span>
       <span class="s2">&quot;lemma&quot;</span><span class="o">:</span> <span class="s2">&quot;tregoj&quot;</span><span class="p">,</span>
       <span class="s2">&quot;gramm&quot;</span><span class="o">:</span> <span class="s2">&quot;V,imp,act,2,pl&quot;</span><span class="p">,</span>
@@ -348,10 +360,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Timofey Arkhangelskiy.
+      &copy;2021-2022, Timofey Arkhangelskiy.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

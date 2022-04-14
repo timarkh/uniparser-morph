@@ -1006,6 +1006,7 @@
  -flex: .а|з<.>
   gloss: LOC|P.3SG
   gramm: case_comp,poss_comp,loc
+  sep: =
  -flex: .а|з<.>
   gloss: ILL|P.3SG
   gramm: case_comp,poss_comp,ill
@@ -2360,6 +2361,7 @@
  -flex: .а|з<.>
   gramm: loc,3sg
   gloss: LOC|P.3SG
+  sep: =
  -flex: .а|з<.>
   gramm: ill,3sg
   gloss: ILL|P.3SG
@@ -2561,6 +2563,7 @@
  -flex: .а|з<.>
   gramm: loc,3sg
   gloss: LOC|P.3SG
+  sep: =
  -flex: .а|з<.>
   gramm: ill,3sg
   gloss: ILL|P.3SG
@@ -2945,6 +2948,7 @@
  -flex: .а|з<.>//.я|з<.>
   gramm: loc,3sg
   gloss: LOC|P.3SG
+  sep: =
  -flex: .а|з<.>//.я|з<.>
   gramm: ill,3sg
   gloss: ILL|P.3SG

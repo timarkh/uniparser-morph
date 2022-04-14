@@ -1,5 +1,6 @@
 from .reduplication import RegexTest
 from .wordform import Wordform
+from .common_functions import remove_morph_breaks, replace_morph_breaks
 
 SIDE_PROCLITIC = 0
 SIDE_ENCLITIC = 1
@@ -113,7 +114,7 @@ class Clitic:
             return
         if self.stem is not None:
             self.raise_error('Duplicate stem in ' + self.lemma + ': ', stem)
-        self.stem = stem
+        self.stem = remove_morph_breaks(stem)
 
     def add_gramm(self, obj):
         gramm = obj['value']
@@ -133,7 +134,7 @@ class Clitic:
         if len(self.gloss) > 0:
             self.raise_error('Duplicate gloss: ' + gloss +
                              ' in ' + self.lemma)
-        self.gloss = gloss
+        self.gloss = self.gloss = replace_morph_breaks(gloss)
 
     def add_paradigm(self, obj):
         paradigm = obj['value']

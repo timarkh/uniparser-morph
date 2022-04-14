@@ -742,7 +742,19 @@ class Parser:
                     # Lemma
                     wf.add_lemma(cl, Inflexion(self.g, {}))
                     # Grammatical tags, if present
-                    infl = Inflexion(g=self.g, dictDescr={"name": "flex", "value":"", "content": [{"name": "gramm", "value": cl.gramm}]}, errorHandler=self.errorHandler)
+                    infl = Inflexion(
+                        g=self.g,
+                        dictDescr={
+                            "name": "flex",
+                            "value": "",
+                            "content": [
+                                {
+                                    "name": "gramm",
+                                    "value": cl.gramm
+                                }
+                            ]},
+                        errorHandler=self.errorHandler
+                    )
                     wf.add_gramm(cl, infl)
                     # Additional fields
                     for field, value in cl.otherData:

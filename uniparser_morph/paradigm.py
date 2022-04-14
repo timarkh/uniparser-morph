@@ -57,10 +57,13 @@ class ParadigmLink:
 
 
 class InflexionPart:
-    def __init__(self, flex, gloss, glossType):
+    def __init__(self, flex, gloss, glossType, sepL='-', sepR='-'):
         self.flex = flex
         self.gloss = gloss
         self.glossType = glossType
+        # L/R separators (- for affixes, = for clitics described as affixes)
+        self.sepL = sepL
+        self.sepR = sepR
 
 
 class Inflexion:
@@ -262,6 +265,11 @@ class Inflexion:
         iRedupl = 0
         bStemStarted = False
         bStemForcedRepeat = False
+        sep = '-'
+        for k, v in self.otherData:
+            if k == 'sep':
+                sep = v
+                break
         for flexPart in flexParts:
             # 1. Look at the gloss.
             if ('.' not in flexPart and not (flexPart.startswith('[')
@@ -351,7 +359,17 @@ class Inflexion:
                     self.rxCleanGloss.sub('', glossParts[iGlossPart]),
                                                        glossType))
                 iGlossPart += 1
-
+        # If there was a custom separator, put it to the left of the leftmost
+        # affix-like part and to the right of the rightmost affix-like part
+        if len(self.flexParts) > 0 and len(self.flexParts[0]) > 0 and sep != '-':
+            for i in range(len(self.flexParts[0])):
+                if self.flexParts[0][i].glossType in (GLOSS_AFX, GLOSS_IFX):
+                    self.flexParts[0][i].sepL = sep
+                    break
+            for i in range(len(self.flexParts[0]) - 1, -1, -1):
+                if self.flexParts[0][i].glossType in (GLOSS_AFX, GLOSS_IFX):
+                    self.flexParts[0][i].sepR = sep
+                    break
         self.ensure_infixes()
         self.rebuild_value()
 
@@ -1200,7 +1218,9 @@ class Paradigm:
                 continue
             fp = InflexionPart(fpOld[iSide][pos[iSide]].flex,
                                fpOld[iSide][pos[iSide]].gloss,
-                               fpOld[iSide][pos[iSide]].glossType)
+                               fpOld[iSide][pos[iSide]].glossType,
+                               fpOld[iSide][pos[iSide]].sepL,
+                               fpOld[iSide][pos[iSide]].sepR)
             if not bStemStarted and fp.glossType == GLOSS_IFX:
                 fp.glossType = GLOSS_AFX
             elif fp.glossType in [GLOSS_STEM, GLOSS_STEM_FORCED, GLOSS_EMPTY]:

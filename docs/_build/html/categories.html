@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>categories.json &#8212; uniparser-morph 2.2.1 documentation</title>
+    <title>categories.json &#8212; uniparser-morph 2.4.3 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -36,14 +36,14 @@
 <h1>categories.json<a class="headerlink" href="#categories-json" title="Permalink to this headline">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">categories.json</span></code> is an optional file. It can be used to classify grammatical tags into category. Category labels are strings, just as tags. For example, <code class="docutils literal notranslate"><span class="pre">N</span></code> and <code class="docutils literal notranslate"><span class="pre">V</span></code> could belong to a category called <code class="docutils literal notranslate"><span class="pre">pos</span></code>, <code class="docutils literal notranslate"><span class="pre">nom</span></code> and <code class="docutils literal notranslate"><span class="pre">acc</span></code> to <code class="docutils literal notranslate"><span class="pre">case</span></code>, and <code class="docutils literal notranslate"><span class="pre">sg</span></code> and <code class="docutils literal notranslate"><span class="pre">pl</span></code>, to <code class="docutils literal notranslate"><span class="pre">number</span></code>. You will only need that file if you want CoNLL-like output (<a class="reference internal" href="usage.html"><span class="doc">format=’conll’</span></a> when calling analysis functions).</p>
 <p><code class="docutils literal notranslate"><span class="pre">categories.json</span></code> is a dictionary. Its keys are tags and values are their categories. Here is an example:</p>
-<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="p">{</span>
+<div class="highlight-javascript notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="highlight"><pre><span></span>  <span class="p">{</span>
       <span class="s2">&quot;A&quot;</span><span class="o">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
       <span class="s2">&quot;S&quot;</span><span class="o">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
       <span class="s2">&quot;V&quot;</span><span class="o">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
@@ -121,10 +121,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Timofey Arkhangelskiy.
+      &copy;2021-2022, Timofey Arkhangelskiy.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
