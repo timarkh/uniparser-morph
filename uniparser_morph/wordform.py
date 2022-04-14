@@ -58,7 +58,10 @@ class Wordform:
 
     def add_lemma(self, lex, flex):
         if flex.lemmaChanger is None:
-            self.lemma = lex.lemma
+            if self.lemma == "":
+                self.lemma = lex.lemma
+            elif lex.lemma != "":
+                self.lemma += ","+lex.lemma
             return
         suitableSubLex = [sl for sl in lex.subLexemes
                           if flex.lemmaChanger.stemNum is None or
@@ -82,7 +85,8 @@ class Wordform:
     def add_gramm(self, sublex, flex):
         self.stem = sublex.stem
         if not flex.replaceGrammar:
-            self.gramm = sublex.gramm
+            if self.gramm == "":
+                self.gramm = sublex.gramm
             if len(sublex.gramm) > 0 and len(flex.gramm) > 0:
                 self.gramm += ','
             self.gramm += flex.gramm
