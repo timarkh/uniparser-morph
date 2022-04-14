@@ -94,8 +94,9 @@ def replace_morph_breaks(gloss):
     return gloss
 
 
-rxCleanL = re.compile('([>~\\-])-+')
-rxCleanR = re.compile('-+([<~])$')
+rxCleanL = re.compile('([>~\\-=])-+')
+rxCleanLDoubleEq = re.compile('([>~=])=+')
+rxCleanR = re.compile('-+([<~=]|$)')
 
 
 def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
@@ -150,10 +151,10 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
                 curFlex = '∅'
             if curPart.glossType == GLOSS_AFX:
                 if bStemStarted:
-                    mainPart += '-' + curPart.gloss + '-'
+                    mainPart += curPart.sepL + curPart.gloss + curPart.sepR
                 else:
-                    pfxPart += '-' + curPart.gloss + '-'
-                wfGlossed += '-' + curFlex + '-'
+                    pfxPart += curPart.sepL + curPart.gloss + curPart.sepR
+                wfGlossed += curPart.sepL + curFlex + curPart.sepR
             elif curPart.glossType == GLOSS_IFX:
                 ifxs += '<' + curPart.gloss + '>'
                 wfGlossed += '<' + curFlex + '>'
@@ -184,10 +185,12 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
         pos[iSide] += 1
         gloss = pfxPart + ifxs + mainPart
     try:
-        gloss = rxCleanL.sub('\\1', gloss).strip('-~')
-        gloss = rxCleanR.sub('\\1', gloss).strip('-~')
-        wfGlossed = rxCleanL.sub('\\1', wfGlossed).strip('-~')
-        wfGlossed = rxCleanR.sub('\\1', wfGlossed).strip('-~')
+        gloss = rxCleanL.sub('\\1', gloss).strip('-~=')
+        gloss = rxCleanLDoubleEq.sub('\\1', gloss).strip('-~=')
+        gloss = rxCleanR.sub('\\1', gloss).strip('-~=')
+        wfGlossed = rxCleanL.sub('\\1', wfGlossed).strip('-~=')
+        wfGlossed = rxCleanLDoubleEq.sub('\\1', wfGlossed).strip('-~=')
+        wfGlossed = rxCleanR.sub('\\1', wfGlossed).strip('-~=')
     except:
         pass
     return wf, wfGlossed, gloss

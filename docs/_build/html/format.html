@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Format overview &#8212; uniparser-morph 2.2.1 documentation</title>
+    <title>Format overview &#8212; uniparser-morph 2.4.3 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -246,6 +246,28 @@
 </pre></div>
 </div>
 </div>
+<div class="section" id="standardized-underlying-form-of-morphemes">
+<h3>Standardized (underlying) form of morphemes<a class="headerlink" href="#standardized-underlying-form-of-morphemes" title="Permalink to this headline">¶</a></h3>
+<p>If you enable glossing, <code class="docutils literal notranslate"><span class="pre">uniparser-morph</span></code> splits your word into parts, so that each morpheme has to be its substring. However, sometimes it is convenient to provide standardized or “underlying” forms of morphemes when glossing. This can make sense if morphemes in your language undergo phonological processes and thus can have many surface forms. If you want a stem or an affix to have a standardized form, add an <code class="docutils literal notranslate"><span class="pre">std</span></code> field to its description. Note that its value should have the same structure (i.e. contain the same dots and other special sequences) as the corresponding stem or affix. Here the usage of the <code class="docutils literal notranslate"><span class="pre">std</span></code> field can be seen in a couple of Udmurt examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">lexeme</span>
+ <span class="n">lex</span><span class="p">:</span> <span class="n">бырйыны</span>
+ <span class="n">stem</span><span class="p">:</span> <span class="n">бырй</span><span class="o">.|</span><span class="n">быръ</span><span class="o">.</span>
+ <span class="n">std</span><span class="p">:</span> <span class="n">бырй</span><span class="o">.</span>
+ <span class="n">gramm</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">tr</span>
+ <span class="n">paradigm</span><span class="p">:</span> <span class="n">connect_verbs</span><span class="o">-</span><span class="n">I</span>
+ <span class="n">trans_en</span><span class="p">:</span> <span class="n">choose</span>
+
+<span class="o">-</span><span class="n">paradigm</span><span class="p">:</span> <span class="n">Infinitive</span><span class="o">-</span><span class="n">I</span><span class="o">-</span><span class="n">dialect</span>
+ <span class="o">-</span><span class="n">flex</span><span class="p">:</span> <span class="o">.</span><span class="n">ын</span><span class="o">&lt;.&gt;</span>
+  <span class="n">std</span><span class="p">:</span> <span class="o">.</span><span class="n">ыны</span><span class="o">&lt;.&gt;</span>
+  <span class="n">gramm</span><span class="p">:</span> <span class="n">inf</span>
+  <span class="n">gloss</span><span class="p">:</span> <span class="n">INF</span>
+ <span class="n">paradigm</span><span class="p">:</span> <span class="n">Comparative</span>
+</pre></div>
+</div>
+<p>If you have a standardized form of either the stem or one of the affixes, the standardized morpheme sequence will be provided in a separate attribute by the analyzer, alongside the regular sequence: <code class="docutils literal notranslate"><span class="pre">parts_std</span></code> in XML and <code class="docutils literal notranslate"><span class="pre">wfGlossedStd</span></code> in JSON. Morphemes with no standardized form listed will be used as is.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">std</span></code> option has not yet been tested in some complex settings such as reduplication.</p>
+</div>
 </div>
 </div>
 
@@ -314,10 +336,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Timofey Arkhangelskiy.
+      &copy;2021-2022, Timofey Arkhangelskiy.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

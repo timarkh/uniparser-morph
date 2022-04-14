@@ -60,3 +60,5 @@ Although in many cases what you describe as the stem only consists of one morphe
 The ``&`` character splits the stem, ``котькуд``, in two parts: ``коть``, an indefiniteness marker glossed as ``INDEF``, and the root ``куд``, glossed ``which``.
 
 Stem morpheme segmentation is designed for concatenative morphology and is not intended for stems that allow infixes.
+
+This notation also works for :doc:`clitics </clitics>`.

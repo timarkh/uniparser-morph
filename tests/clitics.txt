@@ -1,0 +1,7 @@
+-clitic
+ lex: hkao
+ stem: hk&ao
+ type: en
+ gloss: AQU&LOC
+ trans_en: in water
+ gramm: aqu,loc

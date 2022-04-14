@@ -193,8 +193,21 @@ Morpheme IDs
 
 You can add an ``id`` field to morphemes and/or lexemes. IDs do not need to be unique and do not need to be assigned to each and every item. An analyzed word form will contain an ``id`` attribute if any of its parts had an ID. The value will contain the IDs of all its parts separated by a comma. Duplicate IDs will be truncated.
 
-Incorporated words
-^^^^^^^^^^^^^^^^^^
+Clitics
+^^^^^^^
+
+Clitics spelled as one graphic word with their hosts can either be handled with a :doc:`clitics.txt file </clitics>` or described together with the morphemes. The :doc:`clitics.txt </clitics>` mechanism is rather simplistic and only allows you to chop single clitics at the edges of a word. More complicated stuff, such as intraclitics or clitics that have their own inflection, is easier to describe as morphemes. If you use glossing, you will probably want them to be separated by ``=`` rather than ``-`` from the neighboring morphemes. Add a ``sep`` attribute to the description to enable this::
+
+ -paradigm: IO_clitics_consonant
+  -flex: .më.
+   gramm: CLIT_PRO,gen_dat,1sg
+   gloss: 1SG.GENDAT
+   sep: =
+
+If your clitic consists of multiple parts, the ``=`` separator will only appear before the leftmost non-empty part and after the rightmost non-empty part. It is impossible to have both clitics and normal affixes in a single ``flex`` object description.
+
+Incorporated words and intraclitics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are no tools for handling productive incorporation yet in ``uniparser-morph``. Nevertheless, some incorporation can be accounted for in the paradigms. That can work if you have a limited number of words, e.g. pronominal clitics, that can be incorporated or orthographically fused with other words (hosts). Such words can be described as morphemes with a special ``LEX`` tag. Units with a ``LEX`` tag are processed as ordinary morphemes during parsing, but a separate "subword" analysis is added for each of them as one of the postprocessing steps. A ``LEX`` tag should look like ``LEX:xxx:yyy``, where ``xxx`` is the lemma and ``yyy`` contains grammatical tags separated by a semicolon. (A semicolon is used so that a morpheme can have both ``LEX`` tags and regular tags, which are separated by a comma.)
 
