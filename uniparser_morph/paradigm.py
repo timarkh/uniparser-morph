@@ -673,7 +673,7 @@ class InflexionStd(Inflexion):
         }
         return key2func
 
-    def do_nothing(self):
+    def do_nothing(self, obj):
         pass
 
 
