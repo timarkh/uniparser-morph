@@ -18,6 +18,10 @@ if __name__ == '__main__':
     print(analyses)
     analyses = a.analyze_words('котькуд')
     print(analyses)
+
+    # Test clitics
+    analyses = a.analyze_words('paruhkaonai')
+    print(analyses)
     analyses = a.analyze_words('котькудhkao')
     print(analyses)
 

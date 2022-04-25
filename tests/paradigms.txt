@@ -5854,3 +5854,16 @@
   gloss: INF
  paradigm: Comparative
 
+-paradigm: cop
+ -flex: n.
+  gramm: 3
+  gloss: 3Sa
+
+-paradigm: n
+ -flex: .hk|ao
+  gramm: aqu,loc
+  gloss: AQU|LOC
+  sep: =
+  trans_en: in water
+ -flex: .
+  gramm:
