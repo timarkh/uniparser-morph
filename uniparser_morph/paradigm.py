@@ -1003,9 +1003,14 @@ class Paradigm:
 
         # Join all other fields:
         if not flexR.replaceGrammar:
+            grammR = flexR.gramm
             if len(flexL.gramm) > 0 and len(flexR.gramm) > 0:
                 flexL.gramm += ','
-            flexL.gramm += flexR.gramm
+                # Do not add tags that are already there
+                grammL = set(flexL.gramm.split(','))
+                grammR = ','.join(gr for gr in flexR.gramm.split(',')
+                                  if gr not in grammL)
+            flexL.gramm += grammR
         else:
             flexL.gramm = flexR.gramm
             flexL.replaceGrammar = True
