@@ -83,9 +83,10 @@ class Wordform:
         self.lemma = wfLemma.wf
 
     def add_gramm(self, sublex, flex):
-        self.stem = sublex.stem
+        if sublex is not None:
+            self.stem = sublex.stem
         if not flex.replaceGrammar:
-            if self.gramm == "":
+            if self.gramm == "" and sublex is not None:
                 self.gramm = sublex.gramm
             if len(self.gramm) > 0 and len(flex.gramm) > 0:
                 # Avoid repeated tags
@@ -99,7 +100,7 @@ class Wordform:
             self.gramm = flex.gramm
     
     def add_other_data(self, lex, flex):
-        if flex.keepOtherData:
+        if lex is not None and flex.keepOtherData:
             self.otherData = copy.deepcopy(lex.otherData)
         if flex.otherData is not None:
             for k, v in flex.otherData:

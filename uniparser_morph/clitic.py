@@ -37,10 +37,12 @@ class Clitic:
         self.lemma = ''
         self.lexref = ''
         self.stem = None
+        self.stemParts = None
         self.paradigms = []     # TODO: use paradigms
         self.gramm = ''
         self.gloss = ''
         self.side = SIDE_ENCLITIC
+        self.replaceGrammar = False
         self.regexTests = []
         self.otherData = []     # list of tuples (name, value)
         self.key2func = {'lex': self.add_lemma, 'lexref': self.add_lexref,
@@ -115,6 +117,7 @@ class Clitic:
         if self.stem is not None:
             self.raise_error('Duplicate stem in ' + self.lemma + ': ', stem)
         self.stem = remove_morph_breaks(stem)
+        self.stemParts = replace_morph_breaks(stem)  # the stem with the morph breaks, if any
 
     def add_gramm(self, obj):
         gramm = obj['value']

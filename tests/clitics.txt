@@ -5,3 +5,12 @@
  gloss: AQU&LOC
  trans_en: in water
  gramm: aqu,loc
+
+-clitic
+ lex: a
+ stem: n&a&i
+ paradigm: cop
+ trans_en: s/he is
+ type: en
+ gloss: 3&COP&UNCERT
+

@@ -742,30 +742,16 @@ class Parser:
                     # Lemma
                     wf.add_lemma(cl, Inflexion(self.g, {}))
                     # Grammatical tags, if present
-                    infl = Inflexion(
-                        g=self.g,
-                        dictDescr={
-                            "name": "flex",
-                            "value": "",
-                            "content": [
-                                {
-                                    "name": "gramm",
-                                    "value": cl.gramm
-                                }
-                            ]},
-                        errorHandler=self.errorHandler
-                    )
-                    wf.add_gramm(cl, infl)
+                    wf.add_gramm(None, cl)
                     # Additional fields
-                    for field, value in cl.otherData:
-                        wf.add_other_data(cl, infl)
+                    wf.add_other_data(None, cl)
                     # Gloss
                     if cl.side == SIDE_PROCLITIC:
                         wf.gloss = cl.gloss + '=' + wf.gloss
-                        wf.wfGlossed = cl.stem + '=' + wf.wfGlossed
+                        wf.wfGlossed = cl.stemParts + '=' + wf.wfGlossed
                     else:
                         wf.gloss += '=' + cl.gloss
-                        wf.wfGlossed += '=' + cl.stem
+                        wf.wfGlossed += '=' + cl.stemParts
                     analyses.append(wf)
         if printOut:
             if len(analyses) <= 0:
