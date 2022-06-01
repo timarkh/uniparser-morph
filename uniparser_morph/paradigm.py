@@ -781,7 +781,7 @@ class Paradigm:
                     flex.stemNumOut = {iStem}
                 flex.position = POS_NONFINAL
                 flex.replaceGrammar = bReplaceGrammar
-                flex.keepOtherData = False
+                flex.keepOtherData = True
                 flex.startWithSelf = True
                 if len(flex.flexParts[0]) > 0:
                     flex.flexParts[0].insert(0, InflexionPart('', '',
