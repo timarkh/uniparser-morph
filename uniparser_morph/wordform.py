@@ -93,7 +93,7 @@ class Wordform:
                 selfGramm = set(self.gramm.split(','))
                 flex.gramm = ','.join(gr for gr in flex.gramm.split(',')
                                       if gr not in selfGramm)
-                if len(flex.gramm) > 0:
+                if len(flex.gramm) > 0 and not flex.gramm.endswith(','):
                     self.gramm += ','
             self.gramm += flex.gramm
         else:
@@ -225,7 +225,7 @@ class Wordform:
             wfGlossedStd = xml.sax.saxutils.quoteattr(self.wfGlossedStd.strip())
             gloss = xml.sax.saxutils.quoteattr(self.gloss.strip())
             r += ' parts=' + wfGlossed
-            if len(wfGlossedStd) > 0:
+            if len(wfGlossedStd) > 2:
                 r += ' parts_std=' + wfGlossedStd
             r += ' gloss=' + gloss
 
