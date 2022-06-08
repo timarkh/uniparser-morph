@@ -7,6 +7,7 @@ from .common_functions import wfPropertyFields, check_compatibility, join_stem_f
 class Wordform:
     rxLexTag = re.compile(',?\\bLEX:([^,:]*):([^,:]*)')
     rxLexTagOtherField = re.compile('^([^=]+)=(.*)')
+    rxMultipleCommas = re.compile(',,+')
     propertyFields = wfPropertyFields
     printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'lex2', 'gramm2',
                             'trans_ru2', 'trans_en2', 'trans_de2', 'root', 'stamm',
@@ -92,12 +93,13 @@ class Wordform:
                 # Avoid repeated tags
                 selfGramm = set(self.gramm.split(','))
                 flex.gramm = ','.join(gr for gr in flex.gramm.split(',')
-                                      if gr not in selfGramm)
-                if len(flex.gramm) > 0 and not flex.gramm.endswith(','):
+                                      if gr not in selfGramm and len(gr) > 0)
+                if len(flex.gramm) > 0 and not self.gramm.endswith(','):
                     self.gramm += ','
             self.gramm += flex.gramm
         else:
             self.gramm = flex.gramm
+        self.gramm = self.rxMultipleCommas.sub(',', self.gramm)
     
     def add_other_data(self, lex, flex):
         if lex is not None and flex.keepOtherData:
