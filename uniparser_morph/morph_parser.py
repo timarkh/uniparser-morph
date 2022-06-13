@@ -660,7 +660,7 @@ class Parser:
         elif self.parsingMethod == 'fst':
             suitableSubLex = self.stemFst.transduce(word, replacementsAllowed=replacementsAllowed)
             for l, r, sl in suitableSubLex:
-                if self.verbose >= 0:
+                if self.verbose > 1:
                     print('FST: found a stem, parameters:',
                           l, sl.stem, word[l:r+1], sl.stem.find(word[l:r+1]), r - l + 1)
                 state = ParseState(word, sl, l, sl.stem.find(word[l:r+1]), r - l + 1)
