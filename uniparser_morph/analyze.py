@@ -351,4 +351,12 @@ class Analyzer:
             self.analyses_to_json(analyses)
         elif format == 'conll':
             analyses = self.analyses_to_conll(analyses)
+        elif self.g.COMPLEX_WF_AS_BAGS:
+            bagged_analyses = []
+            for word_analyses in analyses:
+                bagged_analyses.append([])
+                for analysis in word_analyses:
+                    analysis.lemma, analysis.gramm, analysis.otherData = analysis.append_subword_data()
+                    bagged_analyses[-1].append(analysis)
+            return bagged_analyses
         return analyses
