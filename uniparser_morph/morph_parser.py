@@ -636,7 +636,7 @@ class Parser:
                 hostsAndClitics.append((cl, host))
         return hostsAndClitics
 
-    def find_stems(self, word):
+    def find_stems(self, word, replacementsAllowed=0):
         """
         Find all possible stems in the given token.
         Return a list of corresponding state instances.
@@ -658,7 +658,7 @@ class Parser:
                         state = ParseState(word, sl, l, sl.stem.find(possibleStem), r - l)
                         states.append(state)
         elif self.parsingMethod == 'fst':
-            suitableSubLex = self.stemFst.transduce(word)
+            suitableSubLex = self.stemFst.transduce(word, replacementsAllowed=replacementsAllowed)
             for l, r, sl in suitableSubLex:
                 if self.verbose > 1:
                     print('FST: found a stem, parameters:',
@@ -667,7 +667,7 @@ class Parser:
                 states.append(state)
         return states
 
-    def parse_host(self, word):
+    def parse_host(self, word, replacementsAllowed=0):
         """
         Return a list of Wordform objects, each representing a possible
         analysis of the word string, assuming it has no clitics.
@@ -675,7 +675,7 @@ class Parser:
         analyses = []
         if self.verbose > 0:
             print(word, ': start searching for sublexemes...')
-        states = self.find_stems(word)
+        states = self.find_stems(word, replacementsAllowed=replacementsAllowed)
         if self.verbose > 0:
             print('Start investigating states...')
         for state in states:
@@ -707,7 +707,7 @@ class Parser:
                     possibleEnhancements.add(newAna)
         return possibleEnhancements
 
-    def parse(self, word, printOut=False):
+    def parse(self, word, printOut=False, replacementsAllowed=0):
         """
         Return a list of Wordform objects, each representing a possible
         analysis of the word string.
@@ -731,7 +731,7 @@ class Parser:
         if self.verbose > 1:
             print(len(hostsAndClitics), 'possible variants of splitting into a host and a clitic.')
         for cl, host in hostsAndClitics:
-            hostAnalyses = self.parse_host(host)
+            hostAnalyses = self.parse_host(host, replacementsAllowed=replacementsAllowed)
             if len(hostAnalyses) <= 0:
                 continue
             for wf in hostAnalyses:

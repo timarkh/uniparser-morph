@@ -170,14 +170,14 @@ class Analyzer:
         }
         return stats
 
-    def __analyze_word__(self, word):
+    def __analyze_word__(self, word, replacementsAllowed=0):
         """
         Analyze a single word. Return either a list of its analyses
         or a list with a single Wordform object that has only the wf
         property filled. Assume the parser has already been initialized.
         """
         self.g.COMPLEX_WF_AS_BAGS = self.flattenSubwords
-        analyses = self.m.parse(word.lower())
+        analyses = self.m.parse(word.lower(), replacementsAllowed=replacementsAllowed)
         if len(analyses) <= 0:
             analyses = [Wordform(self.g, wf=word)]
         else:
@@ -191,7 +191,7 @@ class Analyzer:
             analyses = [ana.to_json() for ana in analyses]
         return analyses
 
-    def analyze_words_nodisamb(self, words):
+    def analyze_words_nodisamb(self, words, replacementsAllowed=0):
         """
         Analyze a single word or a (possibly nested) list of words. Return either a list of
         analyses (all possible analyses of the word) or a nested list of lists
@@ -201,9 +201,9 @@ class Analyzer:
         """
         self.initialize_parser()
         if type(words) == str:
-            return self.__analyze_word__(words)
+            return self.__analyze_word__(words, replacementsAllowed=replacementsAllowed)
         elif type(words) == list:
-            return [self.analyze_words_nodisamb(w) for w in words]
+            return [self.analyze_words_nodisamb(w, replacementsAllowed=replacementsAllowed) for w in words]
         return []
 
     def analyses_to_xml(self, analyses):
@@ -331,7 +331,7 @@ class Analyzer:
                 sAna += self.analyses_to_conll(analyses[i]) + '\n'
         return sAna
 
-    def analyze_words(self, words, cgFile='', format=None, disambiguate=True):
+    def analyze_words(self, words, cgFile='', format=None, disambiguate=True, replacementsAllowed=0):
         """
         Analyze a single word or a (possibly nested) list of words. Return either a list of
         analyses (all possible analyses of the word) or a nested list of lists
@@ -342,7 +342,7 @@ class Analyzer:
         If format == 'conll', the result is one multi-line CoNLL-like string.
         Perform CG3 disambiguation if disambiguate == True and there is a CG3 file.
         """
-        analyses = self.analyze_words_nodisamb(words)
+        analyses = self.analyze_words_nodisamb(words, replacementsAllowed=replacementsAllowed)
         if disambiguate and len(cgFile) > 0 and os.path.exists(cgFile):
             self.disambiguator.disambiguate_analyses(analyses, cgFile)
         if format == 'xml':
