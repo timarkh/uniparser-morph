@@ -13,10 +13,16 @@ if __name__ == '__main__':
     a = Analyzer()
     a.load_grammar()
 
+    # Test replacements in the stem
+    analyses = a.analyze_words('котькыд', replacementsAllowed=1)
+    print(analyses)
+
     # Test morpheme segmentation in the stem
     analyses = a.analyze_words('котькудазгес')
     print(analyses)
     analyses = a.analyze_words('котькуд')
+    print(analyses)
+    analyses = a.analyze_words('данъяськиськом')
     print(analyses)
 
     # Test clitics

@@ -72,6 +72,7 @@ class MorphFST:
     def __init__(self, g, verbose=0, det=False):
         self.g = g
         self.transitions = {}
+        self.transitionsByState = {}
         self.startState = MorphFSTState()
         self.verbose = verbose
         self.det = det
@@ -115,7 +116,7 @@ class MorphFST:
 
     def get_next_states_strict(self, curState, curChar):
         try:
-            return self.transitions[(curState, curChar)]
+            return list(self.transitions[(curState, curChar)])
         except KeyError:
             return []
 
@@ -123,21 +124,39 @@ class MorphFST:
         try:
             resultStrict = self.transitions[(curState, curChar)]
         except KeyError:
-            resultStrict = []
-        resultNonstrict = []
-        resultLoop = []
+            resultStrict = set()
+        resultNonstrict = set()
+        resultLoop = set()
         if curState.loopState:
             if not self.det or len(resultStrict) <= 0:
-                resultLoop.append(curState)
+                resultLoop.add(curState)
         if not self.det and (curState, '') in self.transitions:
-            resultNonstrict += self.transitions[(curState, '')]
-        return resultStrict, resultNonstrict, resultLoop
+            resultNonstrict |= self.transitions[(curState, '')]
+        return list(resultStrict), list(resultNonstrict), list(resultLoop)
+
+    def get_next_states_with_replacement(self, curState, curChar):
+        try:
+            resultStrict = self.transitionsByState[curState] - self.transitions[(curState, curChar)]
+        except KeyError:
+            resultStrict = set()
+        resultNonstrict = set()
+        resultLoop = set()
+        if curState.loopState:
+            if not self.det or len(resultStrict) <= 0:
+                resultLoop.add(curState)
+        if not self.det and (curState, '') in self.transitions:
+            resultNonstrict |= self.transitions[(curState, '')]
+        return list(resultStrict), list(resultNonstrict), list(resultLoop)
 
     def add_transition(self, curState, curChar, nextState):
         try:
-            self.transitions[(curState, curChar)].append(nextState)
+            self.transitions[(curState, curChar)].add(nextState)
         except KeyError:
-            self.transitions[(curState, curChar)] = [nextState]
+            self.transitions[(curState, curChar)] = {nextState}
+        try:
+            self.transitionsByState[curState].add(nextState)
+        except KeyError:
+            self.transitionsByState[curState] = {nextState}
 
     def add_string(self, s, obj):
         """
@@ -289,7 +308,8 @@ class MorphFST:
         return detFst
 
     def transduce(self, token, startChar=0, startState=None,
-                  objStart=0, objEnd=-1):
+                  objStart=0, objEnd=-1,
+                  replacementsAllowed=0):
         """
         Return all objects the transducer can write as its output
         when given token as its input.
@@ -297,25 +317,58 @@ class MorphFST:
         result = []
         if objEnd == -1:
             objEnd = len(token) - 1
+        if replacementsAllowed < 0:
+            replacementsAllowed = 0
         curState = startState
         if curState is None:
             curState = self.startState
         i = startChar
         if i <= len(token) - 1:
+            if replacementsAllowed > 0:
+                nextStStrict, nextStNonstrict, nextStLoop = self.get_next_states_with_replacement(curState, token[i])
+                if len(nextStStrict) <= 0 and len(nextStNonstrict) <= 0 \
+                        and len(nextStLoop) <= 0:
+                    return result
+                for st in nextStStrict:
+                    curObjEnd = objEnd
+                    if curObjEnd >= i:
+                        curObjEnd = i + 1
+                    result += self.transduce(token, i + 1, st, objStart, curObjEnd,
+                                             replacementsAllowed=replacementsAllowed - 1)
+                for st in nextStNonstrict:
+                    curObjEnd = objEnd
+                    if curObjEnd >= i:
+                        curObjEnd = i - 1
+                    result += self.transduce(token, i, st, objStart, curObjEnd,
+                                             replacementsAllowed=replacementsAllowed - 1)
+                for st in nextStLoop:
+                    curObjStart = objStart
+                    curObjEnd = objEnd
+                    if curObjStart < i < curObjEnd:
+                        curObjEnd = i
+                    elif curObjStart == i:
+                        curObjStart = i + 1
+                        curObjEnd = i + 1
+                    elif curObjEnd == i:
+                        curObjEnd -= 1
+                    result += self.transduce(token, i + 1, st, curObjStart, curObjEnd,
+                                             replacementsAllowed=replacementsAllowed - 1)
             nextStStrict, nextStNonstrict, nextStLoop = self.get_next_states(curState, token[i])
             if len(nextStStrict) <= 0 and len(nextStNonstrict) <= 0\
                     and len(nextStLoop) <= 0:
-                return []
+                return result
             for st in nextStStrict:
                 curObjEnd = objEnd
                 if curObjEnd >= i:
                     curObjEnd = i + 1
-                result += self.transduce(token, i + 1, st, objStart, curObjEnd)
+                result += self.transduce(token, i + 1, st, objStart, curObjEnd,
+                                         replacementsAllowed=replacementsAllowed)
             for st in nextStNonstrict:
                 curObjEnd = objEnd
                 if curObjEnd >= i:
                     curObjEnd = i - 1
-                result += self.transduce(token, i, st, objStart, curObjEnd)
+                result += self.transduce(token, i, st, objStart, curObjEnd,
+                                         replacementsAllowed=replacementsAllowed)
             for st in nextStLoop:
                 curObjStart = objStart
                 curObjEnd = objEnd
@@ -326,7 +379,8 @@ class MorphFST:
                     curObjEnd = i + 1
                 elif curObjEnd == i:
                     curObjEnd -= 1
-                result += self.transduce(token, i + 1, st, curObjStart, curObjEnd)
+                result += self.transduce(token, i + 1, st, curObjStart, curObjEnd,
+                                         replacementsAllowed=replacementsAllowed)
         elif curState.obj is not None:
             result += [(objStart, objEnd, obj) for obj in curState.obj]
         return result
