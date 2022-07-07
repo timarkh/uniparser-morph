@@ -353,10 +353,14 @@ class Analyzer:
             analyses = self.analyses_to_conll(analyses)
         elif self.g.COMPLEX_WF_AS_BAGS:
             bagged_analyses = []
-            for word_analyses in analyses:
-                bagged_analyses.append([])
-                for analysis in word_analyses:
-                    analysis.lemma, analysis.gramm, analysis.otherData = analysis.append_subword_data()
-                    bagged_analyses[-1].append(analysis)
+            for word_analysis in analyses:
+                if isinstance(word_analysis, list):
+                    bagged_analyses.append([])
+                    for analysis in word_analysis:
+                        analysis.lemma, analysis.gramm, analysis.otherData = analysis.append_subword_data()
+                        bagged_analyses[-1].append(analysis)
+                else:
+                    word_analysis.lemma, word_analysis.gramm, word_analysis.otherData = word_analysis.append_subword_data()
+                    bagged_analyses.append(word_analysis)
             return bagged_analyses
         return analyses
