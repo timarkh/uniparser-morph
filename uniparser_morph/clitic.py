@@ -72,6 +72,8 @@ class Clitic:
                     self.add_data(obj)
         if self.stem is None:
             self.stem = self.lemma
+        if self.stemParts is None:
+            self.stemParts = self.lemma
 
     def raise_error(self, message, data=None):
         if self.errorHandler is not None:
