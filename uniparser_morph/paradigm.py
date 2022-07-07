@@ -742,11 +742,11 @@ class Paradigm:
         newData = []
         for obj in self.separate_variants(data):
             if obj['name'] == 'stem':
-                stems = obj['value'].split('//')
+                stems = obj['value'].split('|')
             elif obj['name'] == 'gloss':
-                glosses = obj['value'].split('//')
+                glosses = obj['value'].split('|')
             elif obj['name'] == 'gramm':
-                gramms = obj['value'].split('//')
+                gramms = obj['value'].split('|')
             else:
                 newData.append(obj)
         if len(glosses) == 1 and len(stems) > 1:
@@ -781,7 +781,7 @@ class Paradigm:
                     flex.stemNumOut = {iStem}
                 flex.position = POS_NONFINAL
                 flex.replaceGrammar = bReplaceGrammar
-                flex.keepOtherData = True
+                flex.keepOtherData = False
                 flex.startWithSelf = True
                 if len(flex.flexParts[0]) > 0:
                     flex.flexParts[0].insert(0, InflexionPart('', '',
