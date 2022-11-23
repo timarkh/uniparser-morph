@@ -791,6 +791,7 @@ class Paradigm:
                 if keepLexData not in ('yes', 'brackets'):
                     flex.keepOtherData = False
                 elif keepLexData == 'brackets':
+                    flex.keepOtherData = True
                     flex.otherDataBracketL = '['
                     flex.otherDataBracketR = ']'
                 flex.startWithSelf = True
