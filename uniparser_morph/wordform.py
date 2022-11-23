@@ -103,7 +103,12 @@ class Wordform:
     
     def add_other_data(self, lex, flex):
         if lex is not None and flex.keepOtherData:
-            self.otherData = copy.deepcopy(lex.otherData)
+            self.otherData = []
+            for kv in lex.otherData:
+                if kv[1] is not None and len(kv[1]) > 0:
+                    self.otherData.append((kv[0], flex.otherDataBracketL + kv[1] + flex.otherDataBracketR))
+                else:
+                    self.otherData.append(copy.deepcopy(kv))
         if flex.otherData is not None:
             for k, v in flex.otherData:
                 if k not in Wordform.printableOtherFields or len(v) <= 0:

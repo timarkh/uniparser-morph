@@ -100,6 +100,10 @@ class Inflexion:
                                         # or the previous inflexion
         self.keepOtherData = True   # if True, pass all the data from the lexeme
                                     # to the wordform
+        self.otherDataBracketL = ''     # if keepOtherData == True, prepend this to the non-essential
+                                        # values copied from lexeme (e.g. to translations)
+        self.otherDataBracketR = ''     # if keepOtherData == True, append this to the non-essential
+                                        # values copied from lexeme (e.g. to translations)
         self.otherData = []
         self.lemmaChanger = None    # an inflexion object which changes the lemma
         self.startWithSelf = False  # if true, start with the inflexion when joining
@@ -740,6 +744,7 @@ class Paradigm:
         glosses = ['']
         gramms = ['']
         newData = []
+        keepLexData = 'no'
         for obj in self.separate_variants(data):
             if obj['name'] == 'stem':
                 stems = obj['value'].split('|')
@@ -747,6 +752,8 @@ class Paradigm:
                 glosses = obj['value'].split('|')
             elif obj['name'] == 'gramm':
                 gramms = obj['value'].split('|')
+            elif obj['name'] == 'keep_lex_data':
+                keepLexData = obj['value']
             else:
                 newData.append(obj)
         if len(glosses) == 1 and len(stems) > 1:
@@ -781,7 +788,11 @@ class Paradigm:
                     flex.stemNumOut = {iStem}
                 flex.position = POS_NONFINAL
                 flex.replaceGrammar = bReplaceGrammar
-                flex.keepOtherData = False
+                if keepLexData not in ('yes', 'brackets'):
+                    flex.keepOtherData = False
+                elif keepLexData == 'brackets':
+                    flex.otherDataBracketL = '['
+                    flex.otherDataBracketR = ']'
                 flex.startWithSelf = True
                 if len(flex.flexParts[0]) > 0:
                     flex.flexParts[0].insert(0, InflexionPart('', '',
@@ -1016,6 +1027,9 @@ class Paradigm:
             flexL.replaceGrammar = True
         if not flexR.keepOtherData:
             flexL.keepOtherData = False
+        else:
+            flexL.otherDataBracketL = flexR.otherDataBracketL
+            flexL.otherDataBracketR = flexR.otherDataBracketR
         cls.join_reduplications(flexL, flexR)
         flexL.flexParts = cls.join_inflexion_parts(flexL.flexParts,
                                                    flexR.flexParts)
