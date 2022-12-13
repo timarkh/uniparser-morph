@@ -1,0 +1,15 @@
+-deriv-type: V-nyw
+ lex: <0>ныу[.]ын 
+ stem: ныу[.].
+ regex-stem: у.*
+ gramm: +pv,pv_ny
+ keep_lex_data: brackets
+ gloss: PV
+
+
+-deriv-type: V-nyt
+ lex: <0>ныт[.]ын 
+ stem: ныт[.].
+ regex-stem: т.*
+ gramm: +pv,pv_ny
+ gloss: PV

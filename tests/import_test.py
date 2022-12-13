@@ -54,6 +54,16 @@ if __name__ == '__main__':
     analyses = a.analyze_words('юртъёсаз', format='conll')
     print(analyses)
 
+    # Test derivations
+    analyses = a.analyze_words('тулы')
+    print(analyses)
+    analyses = a.analyze_words('ныттулы')
+    print(analyses)
+    analyses = a.analyze_words('уыныс')
+    print(analyses)
+    analyses = a.analyze_words('ныууыныс')
+    print(analyses)
+
     # Test sentences and complex structures
     analyses = a.analyze_words(['Морфологиез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]], format='xml')
     print(analyses)

@@ -788,12 +788,16 @@ class Paradigm:
                     flex.stemNumOut = {iStem}
                 flex.position = POS_NONFINAL
                 flex.replaceGrammar = bReplaceGrammar
-                if keepLexData not in ('yes', 'brackets'):
+                if keepLexData not in ('yes', 'brackets', 'parentheses'):
                     flex.keepOtherData = False
-                elif keepLexData == 'brackets':
+                else:
                     flex.keepOtherData = True
-                    flex.otherDataBracketL = '['
-                    flex.otherDataBracketR = ']'
+                    if keepLexData == 'brackets':
+                        flex.otherDataBracketL = '['
+                        flex.otherDataBracketR = ']'
+                    elif keepLexData == 'parentheses':
+                        flex.otherDataBracketL = '('
+                        flex.otherDataBracketR = ')'
                 flex.startWithSelf = True
                 if len(flex.flexParts[0]) > 0:
                     flex.flexParts[0].insert(0, InflexionPart('', '',
@@ -1029,8 +1033,9 @@ class Paradigm:
         if not flexR.keepOtherData:
             flexL.keepOtherData = False
         else:
-            flexL.otherDataBracketL = flexR.otherDataBracketL
-            flexL.otherDataBracketR = flexR.otherDataBracketR
+            if len(flexR.otherDataBracketL) > 0 or len(flexR.otherDataBracketR) > 0:
+                flexL.otherDataBracketL = flexR.otherDataBracketL
+                flexL.otherDataBracketR = flexR.otherDataBracketR
         cls.join_reduplications(flexL, flexR)
         flexL.flexParts = cls.join_inflexion_parts(flexL.flexParts,
                                                    flexR.flexParts)

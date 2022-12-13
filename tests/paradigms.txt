@@ -5867,3 +5867,18 @@
   trans_en: in water
  -flex: .
   gramm:
+
+-paradigm: deriv_test
+ -flex: <0>.ын
+  gramm: prs,1,sg
+  gloss: PRS.1SG
+ -flex: <0>.ыс
+  gramm: prs,2,sg
+  gloss: PRS.2SG
+ -flex: <0>.ы
+  gramm: prs,3,sg
+  gloss: PRS.3SG
+ -deriv-link: V-nyw
+  recurs_class: 1
+ -deriv-link: V-nyt
+  recurs_class: 1
