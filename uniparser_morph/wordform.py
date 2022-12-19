@@ -2,6 +2,7 @@
 import re
 import xml.sax.saxutils
 from .common_functions import wfPropertyFields, check_compatibility, join_stem_flex
+from .paradigm import Paradigm, ParadigmLink
 
 
 class Wordform:
@@ -58,28 +59,32 @@ class Wordform:
             self.errorHandler.raise_error(message, data)
 
     def add_lemma(self, lex, flex):
-        if flex.lemmaChanger is None:
+        if len(flex.lemmaChangers) <= 0:
             if self.lemma == "":
                 self.lemma = lex.lemma
             elif lex.lemma != "":
                 self.lemma += "+"+lex.lemma
             return
+        unifiedLC = copy.deepcopy(flex.lemmaChangers[0])
+        for i in range(1, len(flex.lemmaChangers)):
+            lc = flex.lemmaChangers[i]
+            Paradigm.join_inflexions(unifiedLC, lc)
         suitableSubLex = [sl for sl in lex.subLexemes
-                          if flex.lemmaChanger.stemNum is None or
-                             len(sl.numStem & flex.lemmaChanger.stemNum) > 0]
+                          if unifiedLC.stemNum is None
+                          or len(sl.numStem & unifiedLC.stemNum) > 0]
         if len(suitableSubLex) <= 0:
             if lex.num_stems() == 1:
                 suitableSubLex = lex.subLexemes
         if len(suitableSubLex) <= 0:
             self.raise_error('No stems available to create the new lemma ' +
-                             flex.lemmaChanger.flex)
+                             unifiedLC.flex)
             self.lemma = ''
             return
         if len(suitableSubLex) > 1:
             if self.verbosity > 0:
                 self.raise_error('Several stems available to create the new lemma ' +
-                                 flex.lemmaChanger.flex)
-        wfLemma = Wordform(self.g, suitableSubLex[0], flex.lemmaChanger,
+                                 unifiedLC.flex)
+        wfLemma = Wordform(self.g, suitableSubLex[0], unifiedLC,
                            self.errorHandler)
         self.lemma = wfLemma.wf
 

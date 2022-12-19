@@ -105,7 +105,7 @@ class Inflexion:
         self.otherDataBracketR = ''     # if keepOtherData == True, append this to the non-essential
                                         # values copied from lexeme (e.g. to translations)
         self.otherData = []
-        self.lemmaChanger = None    # an inflexion object which changes the lemma
+        self.lemmaChangers = []     # inflexions object which change the lemma
         self.startWithSelf = False  # if true, start with the inflexion when joining
                                     # itself to a stem or to a previous inflexion
         try:
@@ -225,8 +225,9 @@ class Inflexion:
             self.raise_error('Wrong lemma in ' + self.flex + ': ', newLemma)
             return
         dictDescr = {'name': 'flex', 'value': newLemma, 'content': []}
-        self.lemmaChanger = Inflexion(self.g, dictDescr, self.errorHandler)
-        self.lemmaChanger.startWithSelf = True
+        lemmaChanger = Inflexion(self.g, dictDescr, self.errorHandler)
+        lemmaChanger.startWithSelf = True
+        self.lemmaChangers.append(lemmaChanger)
 
     def remove_stem_number(self):
         flex = self.flex
@@ -771,11 +772,12 @@ class Paradigm:
         for stem, gloss, gramm in zip(stems, glosses, gramms):
             for stemVar in stem.split('//'):
                 stemVar = re.sub('\\.(?!\\])', '<.>', stemVar)
-                stemVar = stemVar.replace('[.]', '.')
+                # Different conventions for morphemes in stems and inflexions:
+                stemVar = stemVar.replace('[.]', '.').replace('&', '|')
                 bReplaceGrammar = True
                 arrContent = copy.deepcopy(newData)
                 if len(gloss) > 0:
-                    arrContent.append({'name': 'gloss', 'value': gloss})
+                    arrContent.append({'name': 'gloss', 'value': gloss.replace('&', '|')})
                 if gramm.startswith('+') or len(gramm) <= 0:
                     bReplaceGrammar = False
                     gramm = gramm[1:]
@@ -991,7 +993,11 @@ class Paradigm:
         return extensions
 
     @classmethod
-    def join_inflexions(cls, flexL, flexR, paradigmLink, partialCompile=True):
+    def join_inflexions(cls,
+                        flexL: Inflexion,
+                        flexR: Inflexion,
+                        paradigmLink: ParadigmLink=None,
+                        partialCompile=True):
         # print(flexL.flex, flexR.flex)
         if not cls.stem_numbers_agree(flexL, flexR):
             return None
@@ -1006,13 +1012,13 @@ class Paradigm:
             flexL.copy_std()
 
         # Manage links to the subsequent paradigms:
-        if paradigmLink.position != POS_UNSPECIFIED:
+        if paradigmLink is not None and paradigmLink.position != POS_UNSPECIFIED:
             flexL.position = paradigmLink.position
         else:
             flexL.position = flexR.position
-        if paradigmLink.position == POS_FINAL:
+        if paradigmLink is not None and paradigmLink.position == POS_FINAL:
             flexL.make_final()
-        elif len(paradigmLink.subsequent) > 0:
+        elif paradigmLink is not None and len(paradigmLink.subsequent) > 0:
             flexL.subsequent = paradigmLink.subsequent
         else:
             flexL.subsequent = flexR.subsequent
@@ -1050,10 +1056,13 @@ class Paradigm:
                                                         flexR.flexStdObj,
                                                         paradigmLink,
                                                         partialCompile)
+
+        # Join lexeme changers
+        flexL.lemmaChangers += flexR.lemmaChangers
         return flexL
 
     @classmethod
-    def join_other_data(cls, flexL, flexR):
+    def join_other_data(cls, flexL: Inflexion, flexR: Inflexion):
         """
         Add otherData values from flexR to flexL.
         """
@@ -1202,8 +1211,11 @@ class Paradigm:
                 fpOldL = flexPartsL[-1][1:]
             else:
                 fpOldL = flexPartsL[-1]
-            if fpOldL[0].flex != '<.>':
-                fpOldL.insert(0, InflexionPart('<.>', '<.>', GLOSS_NEXT_FLEX))
+            # if fpOldL[0].flex != '<.>':
+            #     fpOldL.insert(0, InflexionPart('<.>', '<.>', GLOSS_NEXT_FLEX))
+            # TODO: Deal with GLOSS_STARTWITHSELF in a definitive way.
+            # TODO: Probably abandon it in favor of uniform handling of stems
+            # TODO: in prardigms and derivations.
             fpNew = [InflexionPart('', '', GLOSS_STARTWITHSELF)]
         else:
             fpOldR = flexPartsR[0]

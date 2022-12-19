@@ -178,8 +178,10 @@ class Grammar:
         return len(self.lexRulesByLemma) + len(self.lexRulesByStem)
 
     def load_clitics(self, fnames):
-        """Load clitics from the file or files specified by fnames.
-        Return the number of lexemes loaded."""
+        """
+        Load clitics from the file or files specified by fnames.
+        Return the number of lexemes loaded.
+        """
         clDescrs = self.load_yaml_descrs(fnames)
         for dictDescr in clDescrs:
             if dictDescr is None or len(dictDescr) <= 0:
@@ -192,14 +194,16 @@ class Grammar:
         return len(self.clitics)
 
     def load_derivations(self, fnames, compileDerivs=False):
-        """Load derivations from the file or files specified by fnames.
-        Return the number of derivations loaded."""
+        """
+        Load derivations from the file or files specified by fnames.
+        Return the number of derivations loaded.
+        """
         derivDescrs = self.load_yaml_descrs(fnames)
         for dictDescr in derivDescrs:
             dictDescr['value'] = '#deriv#' + dictDescr['value']
             try:
                 self.derivations[dictDescr['value']] =\
-                                  Derivation(self, dictDescr, self.errorHandler)
+                                 Derivation(self, dictDescr, self.errorHandler)
             except MemoryError:
                 self.raise_error('Not enough memory for the derivations.')
                 return

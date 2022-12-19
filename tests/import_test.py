@@ -54,7 +54,7 @@ if __name__ == '__main__':
     analyses = a.analyze_words('юртъёсаз', format='conll')
     print(analyses)
 
-    # Test derivations
+    # Test simple derivations
     analyses = a.analyze_words('тулы')
     print(analyses)
     analyses = a.analyze_words('ныттулы')
@@ -63,6 +63,16 @@ if __name__ == '__main__':
     print(analyses)
     analyses = a.analyze_words('ныууыныс')
     print(analyses)
+
+    # Test recursive derivations
+    for w in [
+        "yarika",     # bare verb
+        "yarikase",   # adverbialized verb
+        "tatune",     # bare adverb
+        "tatunemï",   # nominalized adverb
+        "yarikasemï"  # adverbialized, then nominalized verb
+    ]:
+        print(a.analyze_words(w))
 
     # Test sentences and complex structures
     analyses = a.analyze_words(['Морфологиез', [['А'], ['Мон', 'тонэ', 'яратӥсько', '.']]], format='xml')

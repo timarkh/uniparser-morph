@@ -5882,3 +5882,22 @@
   recurs_class: 1
  -deriv-link: V-nyt
   recurs_class: 1
+
+-paradigm: der_test_verb
+ -flex: .
+  gramm:
+
+-paradigm: der_test_noun
+ -flex: .
+  gramm:
+
+-paradigm: der_test_adv
+ -flex: .
+  gramm:
+ deriv-link: A-mi
+
+-paradigm: der_test_v_nmlz
+ -flex: .
+  gramm:
+ deriv-link: V-se
+ deriv-link: V-semi

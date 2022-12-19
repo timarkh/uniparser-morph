@@ -6,10 +6,36 @@
  keep_lex_data: brackets
  gloss: PV
 
-
 -deriv-type: V-nyt
  lex: <0>ныт[.]ын 
  stem: ныт[.].
  regex-stem: т.*
  gramm: +pv,pv_ny
  gloss: PV
+
+
+
+-deriv-type: V-se
+ lex: <0>[.]se
+ stem: [.]se.
+ paradigm: der_test_adv
+ gramm: adv,ptcp
+ gloss: PTCP
+ id: septcp
+
+-deriv-type: A-mi
+ lex: [.]+mï
+ stem: [.]mï.
+ paradigm: der_test_noun
+ gramm: n
+ gloss: NMLZ
+ id: minmlz
+
+-deriv-type: V-semi
+ lex: [.]+semï
+ stem: [.]se&mï.
+ paradigm: der_test_noun
+ gramm: n
+ gloss: PTCP&NMLZ
+ id: septcp,minmlz
+
