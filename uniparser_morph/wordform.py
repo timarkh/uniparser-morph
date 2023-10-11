@@ -10,9 +10,9 @@ class Wordform:
     rxLexTagOtherField = re.compile('^([^=]+)=(.*)')
     rxMultipleCommas = re.compile(',,+')
     propertyFields = wfPropertyFields
-    printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'lex2', 'gramm2',
-                            'trans_ru2', 'trans_en2', 'trans_de2', 'root', 'stamm',
-                            'id', 'sem', 'sem2'}
+    printableOtherFields = {'trans_ru', 'trans_en', 'trans_de', 'trans_fr', 'lex2', 'gramm2',
+                            'trans_ru2', 'trans_en2', 'trans_de2', 'trans_fr2', 'root', 'stamm',
+                            'id', 'sem', 'sem2', 'flextype', 'upos', 'lexref', 'ref'}
     verbosity = 0
     
     def __init__(self, g, sublex=None, flex=None, wf=None, errorHandler=None):
