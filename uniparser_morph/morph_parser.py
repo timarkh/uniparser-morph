@@ -609,14 +609,19 @@ class Parser:
             return []
         return wf
 
-    def get_hosts(self, word, cliticSide=None):
+    def get_hosts(self, word, cliticSide=None, includeSrcWord=True):
         """
-        Find all possible ways of splitting the word into a host and a clitic.
+        Find all possible ways of splitting the word into a host and clitic(s).
         Return a list of tuples (Clitic object of None, remaining part of
         the string). If cliticSide is not None, search only for the clitics
         specified by that argument (proclitics or enclitics).
+        If there are multiple clitics, list firsth the proclitics and then the
+        enclitics.
         """
-        hostsAndClitics = [(None, word)]
+        if includeSrcWord:
+            hostsAndClitics = [(None, word)]
+        else:
+            hostsAndClitics = []
         for cl in self.g.clitics:
             if (cl.side == SIDE_ENCLITIC and
                     cliticSide != SIDE_PROCLITIC and
@@ -625,7 +630,20 @@ class Parser:
                 host = word[:-len(cl.stem)]
                 if not cl.is_compatible_str(host):
                     continue
-                hostsAndClitics.append((cl, host))
+                curHost = host
+                curCl = cl
+                if len(host) > 1:
+                    # Try chopping further clitics
+                    furtherHostsAndClitics = self.get_hosts(host,
+                                                            cliticSide=SIDE_ENCLITIC,
+                                                            includeSrcWord=False)
+                    if len(furtherHostsAndClitics) > 0:
+                        for furtherCl, furtherHost in furtherHostsAndClitics:
+                            hostsAndClitics.append((furtherCl + [curCl], furtherHost))
+                    else:
+                        hostsAndClitics.append(([curCl], curHost))
+                else:
+                    hostsAndClitics.append(([curCl], curHost))
             if (cl.side == SIDE_PROCLITIC and
                     cliticSide != SIDE_ENCLITIC and
                     word.startswith(cl.stem) and
@@ -633,7 +651,18 @@ class Parser:
                 host = word[len(cl.stem):]
                 if not cl.is_compatible_str(host):
                     continue
-                hostsAndClitics.append((cl, host))
+                curHost = host
+                curCl = cl
+                if len(host) > 1:
+                    # Try chopping further clitics
+                    furtherHostsAndClitics = self.get_hosts(host, cliticSide=cliticSide, includeSrcWord=False)
+                    if len(furtherHostsAndClitics) > 0:
+                        for furtherCl, furtherHost in furtherHostsAndClitics:
+                            hostsAndClitics.append(([curCl] + furtherCl, furtherHost))
+                    else:
+                        hostsAndClitics.append(([curCl], curHost))
+                else:
+                    hostsAndClitics.append(([curCl], curHost))
         return hostsAndClitics
 
     def find_stems(self, word, replacementsAllowed=0):
@@ -730,29 +759,29 @@ class Parser:
         hostsAndClitics = self.get_hosts(word)
         if self.verbose > 1:
             print(len(hostsAndClitics), 'possible variants of splitting into a host and a clitic.')
-        for cl, host in hostsAndClitics:
+        for clitics, host in hostsAndClitics:
             hostAnalyses = self.parse_host(host, replacementsAllowed=replacementsAllowed)
             if len(hostAnalyses) <= 0:
                 continue
             for wf in hostAnalyses:
-                if cl is None:
-                    analyses.append(wf)
-                elif cl.is_compatible(wf):
+                if clitics is not None:
                     wf.wf = word
-                    # Lemma
-                    wf.add_lemma(cl, Inflexion(self.g, {}))
-                    # Grammatical tags, if present
-                    wf.add_gramm(None, cl)
-                    # Additional fields
-                    wf.add_other_data(None, cl)
-                    # Gloss
-                    if cl.side == SIDE_PROCLITIC:
-                        wf.gloss = cl.gloss + '=' + wf.gloss
-                        wf.wfGlossed = cl.stemParts + '=' + wf.wfGlossed
-                    else:
-                        wf.gloss += '=' + cl.gloss
-                        wf.wfGlossed += '=' + cl.stemParts
-                    analyses.append(wf)
+                    for cl in clitics:
+                        if cl.is_compatible(wf):
+                            # Lemma
+                            wf.add_lemma(cl, Inflexion(self.g, {}))
+                            # Grammatical tags, if present
+                            wf.add_gramm(None, cl)
+                            # Additional fields
+                            wf.add_other_data(None, cl)
+                            # Gloss
+                            if cl.side == SIDE_PROCLITIC:
+                                wf.gloss = cl.gloss + '=' + wf.gloss
+                                wf.wfGlossed = cl.stemParts + '=' + wf.wfGlossed
+                            else:
+                                wf.gloss += '=' + cl.gloss
+                                wf.wfGlossed += '=' + cl.stemParts
+                analyses.append(wf)
         if printOut:
             if len(analyses) <= 0:
                 print(word + ': no possible analyses found.')
