@@ -89,6 +89,7 @@ class Wordform:
         self.lemma = wfLemma.wf
 
     def add_gramm(self, sublex, flex):
+        flexGramm = flex.gramm
         if sublex is not None:
             self.stem = sublex.stem
         if not flex.replaceGrammar:
@@ -97,13 +98,13 @@ class Wordform:
             if len(self.gramm) > 0 and len(flex.gramm) > 0:
                 # Avoid repeated tags
                 selfGramm = set(self.gramm.split(','))
-                flex.gramm = ','.join(gr for gr in flex.gramm.split(',')
-                                      if gr not in selfGramm and len(gr) > 0)
-                if len(flex.gramm) > 0 and not self.gramm.endswith(','):
+                flexGramm = ','.join(gr for gr in flexGramm.split(',')
+                                     if gr not in selfGramm and len(gr) > 0)
+                if len(flexGramm) > 0 and not self.gramm.endswith(','):
                     self.gramm += ','
-            self.gramm += flex.gramm
+            self.gramm += flexGramm
         else:
-            self.gramm = flex.gramm
+            self.gramm = flexGramm
         self.gramm = self.rxMultipleCommas.sub(',', self.gramm)
     
     def add_other_data(self, lex, flex):
