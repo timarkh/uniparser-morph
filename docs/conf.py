@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'uniparser-morph'
-copyright = '2021-2022, Timofey Arkhangelskiy'
+copyright = '2021-2024, Timofey Arkhangelskiy'
 author = 'Timofey Arkhangelskiy'
 
 # The full version, including alpha/beta/rc tags
