@@ -52,6 +52,7 @@ class Grammar:
         self.stemConversions = {}
         self.derivations = {}
         self.badAnalyses = []
+        self.badAnalysesConditional = []
         self.categories = {}         # tag -> category (needed for CoNLL format only)
 
     @staticmethod
@@ -241,6 +242,28 @@ class Grammar:
             lex.add_derivations()
         return len(self.derivations)
 
+    def compile_ana_template(self, ana):
+        """
+        Compile regexes in one bad analysis template as JSON.
+        Return the analysis with compiled regexes. In case of
+        an error, return None.
+        """
+        if type(ana) != dict:
+            return None
+        bAnaOk = True
+        for k in ana:
+            if type(ana[k]) != str:
+                continue
+            try:
+                ana[k] = re.compile('^' + ana[k].strip('^$') + '$')
+            except:
+                self.raise_error('Wrong regular expression in bad analyses list: ' + ana[k])
+                bAnaOk = False
+                break
+        if bAnaOk:
+            return ana
+        return None
+
     def load_bad_analyses(self, fnames):
         """
         Load json descriptions of wrong analyses that should be
@@ -259,22 +282,21 @@ class Grammar:
             except json.JSONDecodeError:
                 self.raise_error('JSON error when reading a bad analyses file: ' + fname)
         self.badAnalyses = []
+        self.badAnalysesConditional = []
         for ana in tmpBadAnalyses:
-            if type(ana) != dict:
-                continue
-            bAnaOk = True
-            for k in ana:
-                if type(ana[k]) != str:
-                    continue
-                try:
-                    ana[k] = re.compile('^' + ana[k].strip('^$') + '$')
-                except:
-                    self.raise_error('Wrong regular expression in bad analyses list: ' + ana[k])
-                    bAnaOk = False
-                    break
-            if bAnaOk:
-                self.badAnalyses.append(ana)
-        return len(self.badAnalyses)
+            if 'remove' in ana and 'if_exists' in ana:
+                anaRemove = self.compile_ana_template(ana['remove'])
+                anaIfExists = self.compile_ana_template(ana['if_exists'])
+                if anaRemove is not None and anaIfExists is not None:
+                    self.badAnalysesConditional.append({
+                        'remove': anaRemove,
+                        'if_exists': anaIfExists
+                    })
+            else:
+                anaCompiled = self.compile_ana_template(ana)
+                if anaCompiled is not None:
+                    self.badAnalyses.append(anaCompiled)
+        return len(self.badAnalyses) + len(self.badAnalysesConditional)
 
     def load_categories(self, fnames):
         """

@@ -212,26 +212,22 @@ class Parser:
         if self.verbose > 0:
             print('Created FSTs for', len(self.paradigmFsts), 'paradigms.')
 
-    def is_bad_analysis(self, wf):
+    def analysis_conforms(self, wf, template):
         """
-        Check if the given analysis is not in the list of bad analyses
-        in the Grammar.
+        Check if the given analysis conforms to the template provided
+        as input. This function is used to check the analyses against
+        the list of bad analyses in the Grammar.
         """
-        for badAna in self.g.badAnalyses:
-            bAnalysisConforms = True
-            for k, v in badAna.items():
-                try:
-                    realValue = wf.__dict__[k]
-                    if v.search(realValue) is None:
-                        bAnalysisConforms = False
-                        break
-                    # print(v.pattern, k)
-                except KeyError:
-                    bAnalysisConforms = False
-                    break
-            if bAnalysisConforms:
-                return True
-        return False
+        # for badAna in self.g.badAnalyses:
+        for k, v in template.items():
+            try:
+                realValue = wf.__dict__[k]
+                if v.search(realValue) is None:
+                    return False
+                # print(v.pattern, k)
+            except KeyError:
+                return False
+        return True
 
     def inflexion_may_conform(self, state, infl):
         for fp in infl.flexParts[0]:
@@ -696,6 +692,27 @@ class Parser:
                 states.append(state)
         return states
 
+    def is_bad_analysis(self, analyses, i_ana):
+        """
+        Check if the analysis with the index i_ana in the list of
+        analyses is conditionally or unconditionally bad, based on
+        the checks in bad_analyses.txt.
+        """
+        # First, check the unconditional templates
+        for badAna in self.g.badAnalyses:
+            if self.analysis_conforms(analyses[i_ana], badAna):
+                return True
+
+        # Then, check the unconditional templates
+        for badAna in self.g.badAnalysesConditional:
+            badAnaRemove = badAna['remove']
+            badAnaIfExists = badAna['if_exists']
+            if (self.analysis_conforms(analyses[i_ana], badAnaRemove)
+                    and any(i != i_ana and self.analysis_conforms(analyses[i], badAnaIfExists)
+                            for i in range(len(analyses)))):
+                return True
+        return False
+
     def parse_host(self, word, replacementsAllowed=0):
         """
         Return a list of Wordform objects, each representing a possible
@@ -710,8 +727,9 @@ class Parser:
         for state in states:
             analyses += self.investigate_state(state)
         analysesSet = set()
-        for ana in analyses:
-            if self.is_bad_analysis(ana):
+        for i in range(len(analyses)):
+            ana = analyses[i]
+            if self.is_bad_analysis(analyses, i):
                 continue
             enhancedAnas = self.apply_lex_rules(ana)
             if len(enhancedAnas) <= 0:

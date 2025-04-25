@@ -108,13 +108,6 @@ class Wordform:
         self.gramm = self.rxMultipleCommas.sub(',', self.gramm)
     
     def add_other_data(self, lex, flex):
-        if lex is not None and flex.keepOtherData:
-            self.otherData = []
-            for kv in lex.otherData:
-                if kv[1] is not None and len(kv[1]) > 0:
-                    self.otherData.append((kv[0], flex.otherDataBracketL + kv[1] + flex.otherDataBracketR))
-                else:
-                    self.otherData.append(copy.deepcopy(kv))
         if flex.otherData is not None:
             for k, v in flex.otherData:
                 if k not in Wordform.printableOtherFields or len(v) <= 0:
@@ -130,6 +123,25 @@ class Wordform:
                         self.otherData[i] = (self.otherData[i][0], self.otherData[i][1] + '; ' + v)
                 if not bFound:
                     self.otherData.append((k, v))
+        if lex is not None and flex.keepOtherData:
+            # self.otherData = []
+            for kv in lex.otherData:
+                if kv[1] is not None and len(kv[1]) > 0:
+                    bFound = False
+                    for iTuple in range(len(self.otherData)):
+                        kvExisting = self.otherData[iTuple]
+                        if kvExisting[0] == kv[0]:
+                            if kvExisting[1] is None:
+                                kvExisting = (kvExisting[0], '')
+                            elif len(kvExisting[1]) > 0:
+                                kvExisting = (kvExisting[0], kvExisting[1] + ' ')
+                            kvExisting = (kvExisting[0], kvExisting[1] + flex.otherDataBracketL + kv[1] + flex.otherDataBracketR)
+                            self.otherData[iTuple] = kvExisting
+                            bFound = True
+                    if not bFound:
+                        self.otherData.append((kv[0], flex.otherDataBracketL + kv[1] + flex.otherDataBracketR))
+                else:
+                    self.otherData.append(copy.deepcopy(kv))
 
     def expand_lex_morphs(self):
         """

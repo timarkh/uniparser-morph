@@ -85,6 +85,8 @@
   {"gramm": "V.*intr(.(?!caus))*pass,([12]|3,pl).*", "lemma": "^.*(?<!пырын|оскын|азьын|уккын|юлман)ы$"},
   {"gramm": ".*,vn,.*attr_o.*"},
   {"wfGlossed": ".*ӟ-е-?м?[еы]?$", "gramm": ".*(fut(?!,neg)|3,pl,prs).*"},
-  {"wfGlossed": "^[^-]*з-?ь($|-.*)", "lemma": ".*ӟ$"}
+  {"wfGlossed": "^[^-]*з-?ь($|-.*)", "lemma": ".*ӟ$"},
+  {"remove": {"lemma": ".*тулын"},
+   "if_exists": {"gramm": ".*N.*"}}
 ]
 

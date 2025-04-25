@@ -4,6 +4,7 @@
  regex-stem: у.*
  gramm: +pv,pv_ny
  keep_lex_data: brackets
+ trans_en: perfective
  gloss: PV
 
 -deriv-type: V-nyt
