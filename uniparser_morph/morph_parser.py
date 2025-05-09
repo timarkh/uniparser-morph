@@ -699,8 +699,8 @@ class Parser:
         elif self.parsingMethod == 'fst':
             suitableSubLex = self.stemFst.transduce(word, replacementsAllowed=replacementsAllowed)
             for l, r, sl, repl in suitableSubLex:
-                if replacementsAllowed > 0 and r - l + 1 < self.MIN_REPLACEMENT_STEM_LEN:
-                    continue
+                # print(word, sl.stem, replacementsAllowed, l, r)
+                # print(replacementsAllowed, r - l + 1, self.MIN_REPLACEMENT_STEM_LEN, sl.stem)
                 if self.verbose > 1:
                     print('FST: found a stem, parameters:',
                           l, sl.stem, word[l:r+1], sl.stem.find(word[l:r+1]), r - l + 1, repl)
@@ -720,6 +720,8 @@ class Parser:
                     elif action == 'sub':
                         wordReplaced = wordReplaced[:i] + self.WILDCARD + wordReplaced[i+1:]
                 # print(wordReplaced, sl.stem.find(wordReplaced[l:r+1]))
+                if replacementsAllowed > 0 and r - l + 1 + addLen < self.MIN_REPLACEMENT_STEM_LEN:
+                    continue
                 if replacementsAllowed <= 0 or wordReplaced == word:
                     state = ParseState(wordReplaced, sl, l, sl.stem.find(wordReplaced[l:r+1]), r - l + 1)
                 else:
@@ -793,7 +795,7 @@ class Parser:
         states = self.find_stems(word, replacementsAllowed=0)
         analysesSet = self.investigate_states(states, replacementsAllowed=0)
 
-        if len(analysesSet) <= 0 and replacementsAllowed > 0:
+        if len(analysesSet) <= 0 and replacementsAllowed > 0 and len(word) >= self.MIN_REPLACEMENT_WORD_LEN:
             # If this failed, try finding stems with some replacements allowed
             if self.rxNoReplacements is None or self.rxNoReplacements.search(word) is None:
                 states = self.find_stems(word, replacementsAllowed=replacementsAllowed)

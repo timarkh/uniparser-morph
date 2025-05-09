@@ -14,7 +14,13 @@ if __name__ == '__main__':
     a.load_grammar()
 
     # Test replacements in the stem
-    analyses = a.analyze_words('данъяськиськом', replacementsAllowed=1)
+    a.initialize_parser()
+    a.m.MIN_REPLACEMENT_WORD_LEN = 6
+    a.m.MIN_REPLACEMENT_STEM_LEN = 5
+    analyses = a.analyze_words('лучшее', replacementsAllowed=1)
+    print(analyses)
+    print(a.m.MIN_REPLACEMENT_WORD_LEN)
+    analyses = a.analyze_words('лучше', replacementsAllowed=1)
     print(analyses)
     analyses = a.analyze_words('котькдазгес', replacementsAllowed=1)
     print(analyses)

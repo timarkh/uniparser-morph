@@ -314,7 +314,7 @@ class MorphFST:
         when given token as its input.
         """
         result = []
-        if objEnd == -1:
+        if objEnd == -1 or objEnd > len(token) - 1:
             objEnd = len(token) - 1
         if replacementsAllowed < 0:
             replacementsAllowed = 0
