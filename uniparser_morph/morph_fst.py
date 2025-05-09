@@ -343,8 +343,8 @@ class MorphFST:
                                               replacementsAllowed=replacementsAllowed - 1):
                         result.append(tuple([res[0], res[1], res[2], tuple([('ins', i)] + list(res[3]))]))
                 # Insertion (did not follow any transition while chopping one character)
-                # Do not apply to the first character of the word
-                if i > 0:
+                # Do not apply to the first or the last character of the word
+                if 0 < i < len(token) - 1:
                     curObjEnd = objEnd
                     if curObjEnd >= i:
                         curObjEnd = i + 1

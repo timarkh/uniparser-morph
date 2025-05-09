@@ -80,6 +80,7 @@ class Parser:
                                '([0-9,.\\-%]+|'
                                '[\\w\\-\'`´‘’‛/@.,]+?)'
                                '([^\\w]*)$')
+    rxNoReplacements = None         # words that should not be searched with replacements (language-specific)
 
     def __init__(self, g, verbose=0, parsingMethod='fst', errorHandler=None):
         self.g = g
@@ -426,7 +427,6 @@ class Parser:
             if (replacementsAllowed <= 0
                     or wf.wf is None or state.wf is None
                     or len(wf.wf) < self.MIN_REPLACEMENT_WORD_LEN or len(state.wf) < self.MIN_REPLACEMENT_WORD_LEN):
-                # 3 characters as an absolute minimum for a word with replacements
                 return None
             elif textdistance.damerau_levenshtein.distance(wf.wf, state.wf) > replacementsAllowed:
                 return None
@@ -795,8 +795,9 @@ class Parser:
 
         if len(analysesSet) <= 0 and replacementsAllowed > 0:
             # If this failed, try finding stems with some replacements allowed
-            states = self.find_stems(word, replacementsAllowed=replacementsAllowed)
-            analysesSet = self.investigate_states(states, replacementsAllowed=replacementsAllowed)
+            if self.rxNoReplacements is None or self.rxNoReplacements.search(word) is None:
+                states = self.find_stems(word, replacementsAllowed=replacementsAllowed)
+                analysesSet = self.investigate_states(states, replacementsAllowed=replacementsAllowed)
 
         # t2 = time.time()
         # print(t2 - t1, 'seconds for analyzing.')
