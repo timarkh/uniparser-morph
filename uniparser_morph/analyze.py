@@ -128,7 +128,7 @@ class Analyzer:
                 self.m.fill_affixes()
 
     def analyze_wordlist(self, freqListFile=None, parsedFile=None, unparsedFile=None,
-                         freqListSeparator=None, verbose=False):
+                         freqListSeparator=None, verbose=False, replacementsAllowed=0):
         """
         Analyze a frequency list in a file. Write output to files with lists
         of analyzed and unanalyzed words. Use default filenames if none are
@@ -156,6 +156,7 @@ class Analyzer:
                                                     fnameParsed=parsedFile,
                                                     fnameUnparsed=unparsedFile,
                                                     glossing=self.glossing,
+                                                    replacementsAllowed=replacementsAllowed,
                                                     maxLines=10000000000)
         anaTime = time.time() - t1
         if verbose:

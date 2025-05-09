@@ -878,7 +878,7 @@ class Parser:
         return r + token + '</w>'
 
     def parse_freq_list(self, fnameIn, sep=':', fnameParsed='', fnameUnparsed='',
-                        maxLines=None, glossing=False):
+                        maxLines=None, glossing=False, replacementsAllowed=0):
         """
         Analyze a frequency list of tokens. Write analyses to fnameParsed
         and unanalyzed tokens to fnameUnparsed. Return total number of tokens
@@ -908,7 +908,7 @@ class Parser:
         fParsed = open(fnameParsed, 'w', encoding='utf-8')
         fUnparsed = open(fnameUnparsed, 'w', encoding='utf-8')
         for (token, freq) in sorted(lines, key=lambda x: (-x[1], x[0])):
-            analyses = self.parse(token)
+            analyses = self.parse(token, replacementsAllowed=replacementsAllowed)
             if len(analyses) <= 0:
                 fUnparsed.write(token + '\n')
                 unparsedTokenFreqs += freq
@@ -920,7 +920,7 @@ class Parser:
         return len(lines), parsedTokenFreqs / (parsedTokenFreqs + unparsedTokenFreqs)
 
     def parse_txt(self, fnameIn, fnameOut='', encoding='utf-8-sig',
-                  glossing=False):
+                  glossing=False, replacementsAllowed=0):
         """
         Analyze a text file fnameIn. Write the processed text to fnameOut.
         Return total number of tokens and number of the parsed tokens.
@@ -951,7 +951,7 @@ class Parser:
             puncr = m.group(3)
             processedText += puncl
             if len(wf) > 0:
-                anas = self.parse(wf.lower())
+                anas = self.parse(wf.lower(), replacementsAllowed=replacementsAllowed)
                 if len(anas) > 0:
                     wordsAnalyzed += 1
                 processedText += Parser.ana2xml(wf, anas, glossing=glossing)
