@@ -1,6 +1,7 @@
 import re
 import copy
 import time
+import textdistance
 from .common_functions import GLOSS_EMPTY, GLOSS_STEM, GLOSS_STEM_FORCED, GLOSS_STARTWITHSELF, POS_NONFINAL
 from .paradigm import Paradigm, Inflexion
 from .wordform import Wordform
@@ -65,8 +66,10 @@ class ParseState:
 class Parser:
     MAX_STEM_START_LEN = 6
     MAX_EMPTY_INFLEXIONS = 2
-    MAX_TOKEN_LENGTH = 512   # to avoid stack overflow in FST recursion
-    REMEMBER_PARSES = False  # useless if parsing a frequency list
+    MAX_TOKEN_LENGTH = 512          # to avoid stack overflow in FST recursion
+    MIN_REPLACEMENT_STEM_LEN = 5    # minimal length of a stem found with at least one replacement
+    REMEMBER_PARSES = False         # useless if parsing a frequency list
+    WILDCARD = '•'                  # technical character that is considered equal to any single character
 
     rxFirstNonEmptyPart = re.compile('^(.*?)([^ .()\\[\\]<>|~]{1,' + str(MAX_STEM_START_LEN) +
                                      '})')
@@ -317,7 +320,7 @@ class Parser:
         # print('paradigm:', paraName, '\n***\n',
         #       u'\n----\n'.join(f.flex for f in grammar.Grammar.paradigms[paraName].flex))
         # print(paraFst)
-        for inflStart, inflEnd, infl in suitableInfl:
+        for inflStart, inflEnd, infl, repl in suitableInfl:
             # print(inflStart, inflEnd, infl)
             if findDerivations and len(infl.flexParts) > 0 and\
                             len(infl.flexParts[0]) > 0 and\
@@ -370,7 +373,7 @@ class Parser:
             return self.find_inflexions_fst(state, paraName, findDerivations, emptyDepth)
         return []
 
-    def get_wordforms(self, state):
+    def get_wordforms(self, state, replacementsAllowed=0):
         """
         Look at the state after the loop has been finished. Check if
         the combination of stem and affixes found during the loop can
@@ -415,9 +418,14 @@ class Parser:
         if infl is None:
             return None
         wf = Wordform(self.g, state.sl, infl)
-        if wf is None or wf.wf != state.wf:
+        if wf is None:
             # print(infl, wf, state.wf)
             return None
+        if wf.wf != state.wf:
+            if replacementsAllowed <= 0:
+                return None
+            elif textdistance.damerau_levenshtein.distance(wf.wf, state.wf) > replacementsAllowed:
+                return None
         if self.verbose > 0:
             print(state)
         return [wf]
@@ -472,7 +480,7 @@ class Parser:
             return True
         return False
 
-    def investigate_state(self, state):
+    def investigate_state(self, state, replacementsAllowed=0):
         while self.continue_loop(state):
             if self.verbose > 1:
                 print(state)
@@ -500,7 +508,7 @@ class Parser:
                                                   state.inflLevels, curLevel, state.curStemPos,
                                                   state.curPos, state.derivsUsed + newDerivsUsed,
                                                   infl)
-                            resultingStates += self.investigate_state(newState)
+                            resultingStates += self.investigate_state(newState, replacementsAllowed=replacementsAllowed)
                         return resultingStates
                 elif state.curStemPos == 0 and len(state.inflLevels) <= 0:
                     # find derivational inflexions
@@ -516,7 +524,7 @@ class Parser:
                                               state.inflLevels, 0, state.curStemPos,
                                               state.curPos, state.derivsUsed + newDerivsUsed,
                                               infl)
-                        resultingStates += self.investigate_state(newState)
+                        resultingStates += self.investigate_state(newState, replacementsAllowed=replacementsAllowed)
                     if len(resultingStates) > 0:
                         if self.verbose > 1:
                             print(len(resultingStates), 'derivational inflexions found.')
@@ -527,7 +535,7 @@ class Parser:
                                                   state.curPos, state.derivsUsed)
                             newState.curPos += 1
                             newState.curStemPos += 1
-                            resultingStates += self.investigate_state(newState)
+                            resultingStates += self.investigate_state(newState, replacementsAllowed=replacementsAllowed)
                         return resultingStates
                 if state.stemCorrStart <= state.curStemPos <\
                                 state.stemCorrStart + state.corrLength:
@@ -539,7 +547,8 @@ class Parser:
                     self.raise_error('Stem or wordform ended unexpectedly: stem=' +
                                      state.sl.stem + ', wf=' + state.wf + '.')
                     return []
-                elif state.wf[state.curPos] != state.sl.stem[state.curStemPos]:
+                elif (state.wf[state.curPos] != state.sl.stem[state.curStemPos]
+                      and (state.wf[state.curPos] != self.WILDCARD and state.sl.stem[state.curStemPos] != self.WILDCARD)):
                     return []
                 state.curPos += 1
                 state.curStemPos += 1
@@ -581,16 +590,17 @@ class Parser:
                                                       state.stemCorrStart, state.corrLength,
                                                       state.inflLevels, curLevel, state.curStemPos,
                                                       state.curPos, state.derivsUsed + newDerivsUsed, infl, pl)
-                                resultingStates += self.investigate_state(newState)
+                                resultingStates += self.investigate_state(newState, replacementsAllowed=replacementsAllowed)
                         return resultingStates
                 elif curPos >= len(fp.flex):   # or fp.glossType == paradigm.GLOSS_EMPTY:
                     state.inflLevels[state.curLevel]['curPart'] += 1
                     state.inflLevels[state.curLevel]['curPos'] = 0
                     continue
                 else:
-                    if curPos >= len(fp.flex) or\
-                                    state.curPos >= len(state.wf) or\
-                                    fp.flex[curPos] != state.wf[state.curPos]:
+                    if (curPos >= len(fp.flex)
+                            or state.curPos >= len(state.wf)
+                            or (fp.flex[curPos] != state.wf[state.curPos]
+                                and fp.flex[curPos] != self.WILDCARD and state.wf[state.curPos] != self.WILDCARD)):
                         return []
                     state.curPos += 1
                     state.inflLevels[state.curLevel]['curPos'] += 1
@@ -600,7 +610,7 @@ class Parser:
             print(state)
             print('Trying to get a wordform...')
             print('Inflexions:\n' + '---\n'.join(str(l['curInfl']) for l in state.inflLevels))
-        wf = self.get_wordforms(state)
+        wf = self.get_wordforms(state, replacementsAllowed=replacementsAllowed)
         if wf is None:
             return []
         return wf
@@ -684,11 +694,39 @@ class Parser:
                         states.append(state)
         elif self.parsingMethod == 'fst':
             suitableSubLex = self.stemFst.transduce(word, replacementsAllowed=replacementsAllowed)
-            for l, r, sl in suitableSubLex:
+            for l, r, sl, repl in suitableSubLex:
+                if replacementsAllowed > 0 and r - l + 1 < self.MIN_REPLACEMENT_STEM_LEN:
+                    continue
                 if self.verbose > 1:
                     print('FST: found a stem, parameters:',
-                          l, sl.stem, word[l:r+1], sl.stem.find(word[l:r+1]), r - l + 1)
-                state = ParseState(word, sl, l, sl.stem.find(word[l:r+1]), r - l + 1)
+                          l, sl.stem, word[l:r+1], sl.stem.find(word[l:r+1]), r - l + 1, repl)
+                wordReplaced = word
+                addLen = 0
+                for action, i in repl:
+                    if i < 0 or i >= len(wordReplaced):
+                        continue
+                    if action == 'swap' and i < len(wordReplaced) - 1:
+                        wordReplaced = wordReplaced[:i] + wordReplaced[i + 1] + wordReplaced[i] + wordReplaced[i + 2:]
+                    elif action == 'del':
+                        wordReplaced = wordReplaced[:i] + wordReplaced[i+1:]
+                        addLen -= 1
+                    elif action == 'ins':
+                        wordReplaced = wordReplaced[:i] + self.WILDCARD + wordReplaced[i:]
+                        addLen += 1
+                    elif action == 'sub':
+                        wordReplaced = wordReplaced[:i] + self.WILDCARD + wordReplaced[i+1:]
+                # print(wordReplaced, sl.stem.find(wordReplaced[l:r+1]))
+                if replacementsAllowed <= 0 or wordReplaced == word:
+                    state = ParseState(wordReplaced, sl, l, sl.stem.find(wordReplaced[l:r+1]), r - l + 1)
+                else:
+                    matchPosition = -1
+                    substringReplaced = re.escape(wordReplaced[l:r + 1 + addLen]).replace(self.WILDCARD, '.')
+                    m = re.search(substringReplaced, sl.stem)
+                    if m is not None:
+                        matchPosition = m.start(0)
+                    state = ParseState(wordReplaced, sl, l, matchPosition, r - l + 1 + addLen)
+                    # print('FST: found a stem, parameters:',
+                    #       l, sl.stem, wordReplaced[l:r + 1 + addLen], matchPosition, r - l + 1 + addLen, word, repl, wordReplaced)
                 states.append(state)
         return states
 
@@ -713,19 +751,16 @@ class Parser:
                 return True
         return False
 
-    def parse_host(self, word, replacementsAllowed=0):
+    def investigate_states(self, states, replacementsAllowed=0):
         """
-        Return a list of Wordform objects, each representing a possible
-        analysis of the word string, assuming it has no clitics.
+        Investigate all states corresponding to the stems found by the stem FST.
+        Return a set of all possible analyses.
         """
         analyses = []
         if self.verbose > 0:
-            print(word, ': start searching for sublexemes...')
-        states = self.find_stems(word, replacementsAllowed=replacementsAllowed)
-        if self.verbose > 0:
             print('Start investigating states...')
         for state in states:
-            analyses += self.investigate_state(state)
+            analyses += self.investigate_state(state, replacementsAllowed=replacementsAllowed)
         analysesSet = set()
         for i in range(len(analyses)):
             ana = analyses[i]
@@ -738,6 +773,29 @@ class Parser:
                 analysesSet |= enhancedAnas
         for ana in analysesSet:
             ana.expand_lex_morphs()
+        return analysesSet
+
+    def parse_host(self, word, replacementsAllowed=0):
+        """
+        Return a list of Wordform objects, each representing a possible
+        analysis of the word string, assuming it has no clitics.
+        """
+        # t1 = time.time()
+        analyses = []
+        if self.verbose > 0:
+            print(word, ': start searching for sublexemes...')
+
+        # First, try finding stems in a straightforward, deterministic way
+        states = self.find_stems(word, replacementsAllowed=0)
+        analysesSet = self.investigate_states(states, replacementsAllowed=0)
+
+        if len(analysesSet) <= 0 and replacementsAllowed > 0:
+            # If this failed, try finding stems with some replacements allowed
+            states = self.find_stems(word, replacementsAllowed=replacementsAllowed)
+            analysesSet = self.investigate_states(states, replacementsAllowed=replacementsAllowed)
+
+        # t2 = time.time()
+        # print(t2 - t1, 'seconds for analyzing.')
         return analysesSet
 
     def apply_lex_rules(self, ana):
