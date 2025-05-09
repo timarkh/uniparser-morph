@@ -68,6 +68,7 @@ class Parser:
     MAX_EMPTY_INFLEXIONS = 2
     MAX_TOKEN_LENGTH = 512          # to avoid stack overflow in FST recursion
     MIN_REPLACEMENT_STEM_LEN = 5    # minimal length of a stem found with at least one replacement
+    MIN_REPLACEMENT_WORD_LEN = 6    # minimal length of a word form that can be only accepted with replacements
     REMEMBER_PARSES = False         # useless if parsing a frequency list
     WILDCARD = '•'                  # technical character that is considered equal to any single character
 
@@ -422,7 +423,10 @@ class Parser:
             # print(infl, wf, state.wf)
             return None
         if wf.wf != state.wf:
-            if replacementsAllowed <= 0:
+            if (replacementsAllowed <= 0
+                    or wf.wf is None or state.wf is None
+                    or len(wf.wf) < self.MIN_REPLACEMENT_WORD_LEN or len(state.wf) < self.MIN_REPLACEMENT_WORD_LEN):
+                # 3 characters as an absolute minimum for a word with replacements
                 return None
             elif textdistance.damerau_levenshtein.distance(wf.wf, state.wf) > replacementsAllowed:
                 return None
