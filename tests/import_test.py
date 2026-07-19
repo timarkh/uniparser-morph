@@ -22,6 +22,9 @@ if __name__ == '__main__':
     print(a.m.MIN_REPLACEMENT_WORD_LEN)
     analyses = a.analyze_words('лучше', replacementsAllowed=1)
     print(analyses)
+    # a.m.verbose = 2
+    analyses = a.analyze_words('котькӱдазгёс', replacementsAllowed=0)
+    print(analyses)
     analyses = a.analyze_words('котькдазгес', replacementsAllowed=1)
     print(analyses)
     analyses = a.analyze_words('коьткудазгес', replacementsAllowed=1)

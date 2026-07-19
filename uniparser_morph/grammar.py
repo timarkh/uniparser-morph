@@ -54,6 +54,7 @@ class Grammar:
         self.badAnalyses = []
         self.badAnalysesConditional = []
         self.categories = {}         # tag -> category (needed for CoNLL format only)
+        self.charEquiv = {}         # character -> list of characters that have to considered as its equivalents
 
     @staticmethod
     def raise_error(message, data=None):
@@ -316,6 +317,66 @@ class Grammar:
             except json.JSONDecodeError:
                 self.raise_error('JSON error when reading a bad analyses file: ' + fname)
         return len(self.categories)
+
+    def load_char_equiv(self, fnames):
+        """
+        Load TSV descriptions of character equivalencies.
+        """
+        self.charEquiv = {}
+        if type(fnames) == str:
+            fnames = [fnames]
+        for fname in fnames:
+            with open(fname, 'r', encoding='utf-8-sig') as fIn:
+                for line in fIn:
+                    if '\t' not in line:
+                        continue
+                    line = line.strip('\r\n')
+                    fields = line.split('\t')
+                    if len(fields[0]) == 1:
+                        self.charEquiv[fields[0]] = set(c for c in fields[1] if c != ' ')
+        return len(self.charEquiv)
+
+    def str_equal_equiv(self, s1, s2):
+        """
+        Return True iff s1 == s2 modulo character equivalences (if any).
+        Check if characters in s1 can be replaced in such a way as to get s2.
+        This function is thus not guaranteed to be symmetrical.
+        """
+        if type(s1) is not str or type(s2) is not str:
+            return False
+        if len(self.charEquiv) <= 0 and s1 != s2:
+            return False
+        if len(s1) != len(s2):
+            return False
+        for i in range(len(s1)):
+            if s1[i] != s2[i] and not(s1[i] in self.charEquiv and len(self.charEquiv[s1[i]]) > 0
+                                      and any(c == s2[i] for c in self.charEquiv[s1[i]])):
+                return False
+        return True
+
+    def str_find_equiv(self, sWhat, sWhere):
+        """
+        str.find function that takes character equivalences into account.
+        Check if characters in sWhat can be replaced in such a way as to match a part of sWhere.
+        This function is thus not guaranteed to be symmetrical.
+        """
+
+        if type(sWhat) is not str or type(sWhere) is not str:
+            return False
+        if len(self.charEquiv) <= 0:
+            sWhere.find(sWhat)
+
+        for iStart in range(len(sWhere) - len(sWhat)):
+            bEqual = True
+            for iPos in range(len(sWhat)):
+                if (sWhere[iStart + iPos] != sWhat[iPos]
+                        and not (sWhat[iPos] in self.charEquiv
+                                 and sWhere[iStart + iPos] in self.charEquiv[sWhat[iPos]])):
+                    bEqual = False
+                    break
+            if bEqual:
+                return iStart
+        return -1
 
     def add_deriv_links_to_paradigms(self):
         """

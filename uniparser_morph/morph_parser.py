@@ -243,7 +243,13 @@ class Parser:
                 continue
             if fp.flex == '<.>':
                 continue
-            if fp.flex not in state.wf[state.curPos:]:
+            wfSfx = state.wf[state.curPos:]
+            if (fp.flex not in wfSfx
+                    and not (len(self.g.charEquiv) > 0
+                             and any(self.g.str_equal_equiv(wfSfx[iPos:iPos+len(fp.flex)], fp.flex))
+                             for iPos in range(0, len(wfSfx) - len(fp.flex)))):
+                # The first non-empty part of the inflexion is not contained in the
+                # remaining part of the word, even considering character equivalencies (if any)
                 return False
             return True
         return True
@@ -272,8 +278,8 @@ class Parser:
                         return False
                 if state.curPos >= len(state.wf):
                     return False
-                # if not fp.flex.startswith(state.wf[state.curPos]):
-                if not fp.flex == state.wf[state.curPos:state.curPos + len(fp.flex)]:
+                wfSegment = state.wf[state.curPos:state.curPos + len(fp.flex)]
+                if not (fp.flex == wfSegment or self.g.str_equal_equiv(wfSegment, fp.flex)):
                     return False
                 return True
         return True
@@ -423,7 +429,7 @@ class Parser:
         if wf is None:
             # print(infl, wf, state.wf)
             return None
-        if wf.wf != state.wf:
+        if wf.wf != state.wf and not self.g.str_equal_equiv(state.wf, wf.wf):
             if (replacementsAllowed <= 0
                     or wf.wf is None or state.wf is None
                     or len(wf.wf) < self.MIN_REPLACEMENT_WORD_LEN or len(state.wf) < self.MIN_REPLACEMENT_WORD_LEN):
@@ -532,7 +538,8 @@ class Parser:
                     if len(resultingStates) > 0:
                         if self.verbose > 1:
                             print(len(resultingStates), 'derivational inflexions found.')
-                        if state.wf[state.curPos] == state.sl.stem[state.curStemPos]:
+                        if (state.wf[state.curPos] == state.sl.stem[state.curStemPos]
+                                or self.g.str_equal_equiv(state.wf[state.curPos], state.sl.stem[state.curStemPos])):
                             newState = ParseState(state.wf, state.sl, state.wfCorrStart,
                                                   state.stemCorrStart, state.corrLength,
                                                   state.inflLevels, -1, state.curStemPos,
@@ -552,6 +559,7 @@ class Parser:
                                      state.sl.stem + ', wf=' + state.wf + '.')
                     return []
                 elif (state.wf[state.curPos] != state.sl.stem[state.curStemPos]
+                      and not self.g.str_equal_equiv(state.wf[state.curPos], state.sl.stem[state.curStemPos])
                       and (state.wf[state.curPos] != self.WILDCARD and state.sl.stem[state.curStemPos] != self.WILDCARD)):
                     return []
                 state.curPos += 1
@@ -604,6 +612,7 @@ class Parser:
                     if (curPos >= len(fp.flex)
                             or state.curPos >= len(state.wf)
                             or (fp.flex[curPos] != state.wf[state.curPos]
+                                and not self.g.str_equal_equiv(state.wf[state.curPos], fp.flex[curPos])
                                 and fp.flex[curPos] != self.WILDCARD and state.wf[state.curPos] != self.WILDCARD)):
                         return []
                     state.curPos += 1
@@ -703,7 +712,7 @@ class Parser:
                 # print(replacementsAllowed, r - l + 1, self.MIN_REPLACEMENT_STEM_LEN, sl.stem)
                 if self.verbose > 1:
                     print('FST: found a stem, parameters:',
-                          l, sl.stem, word[l:r+1], sl.stem.find(word[l:r+1]), r - l + 1, repl)
+                          l, sl.stem, word[l:r+1], self.g.str_find_equiv(word[l:r+1], sl.stem), r - l + 1, repl)
                 wordReplaced = word
                 addLen = 0
                 for action, i in repl:
@@ -723,7 +732,7 @@ class Parser:
                 if replacementsAllowed > 0 and r - l + 1 + addLen < self.MIN_REPLACEMENT_STEM_LEN:
                     continue
                 if replacementsAllowed <= 0 or wordReplaced == word:
-                    state = ParseState(wordReplaced, sl, l, sl.stem.find(wordReplaced[l:r+1]), r - l + 1)
+                    state = ParseState(wordReplaced, sl, l, self.g.str_find_equiv(wordReplaced[l:r+1], sl.stem), r - l + 1)
                 else:
                     matchPosition = -1
                     substringReplaced = re.escape(wordReplaced[l:r + 1 + addLen]).replace(self.WILDCARD, '.')

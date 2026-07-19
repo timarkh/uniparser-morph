@@ -132,6 +132,11 @@ class MorphFST:
                 resultLoop.add(curState)
         if not self.det and (curState, '') in self.transitions:
             resultNonstrict |= self.transitions[(curState, '')]
+        if not self.det and curChar in self.g.charEquiv:
+            # Try transitions by characters that are considered equivalent to the current one
+            for c in self.g.charEquiv[curChar]:
+                if c != curChar and (curState, c) in self.transitions:
+                    resultStrict |= self.transitions[(curState, c)]
         return list(resultStrict), list(resultNonstrict), list(resultLoop)
 
     def get_next_states_with_replacement(self, curState, curChar):

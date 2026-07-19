@@ -24,6 +24,7 @@ class Analyzer:
         self.conversionFile = 'stem_conversions.txt'
         self.cliticFile = 'clitics.txt'
         self.delAnaFile = 'bad_analyses.txt'
+        self.charEquivFile = 'char_equiv.txt'
         self.categoriesFile = 'categories.json'
         self.freqListFile = 'wordlist.csv'
         self.freqListSeparator = '\t'
@@ -75,6 +76,7 @@ class Analyzer:
         conversionFiles = self.collect_filenames(self.conversionFile)
         cliticFiles = self.collect_filenames(self.cliticFile)
         delAnaFiles = self.collect_filenames(self.delAnaFile)
+        charEquivFiles = self.collect_filenames(self.charEquivFile)
         categoriesFiles = self.collect_filenames(self.categoriesFile)
 
         if self.parsedFile is None or len(self.parsedFile) <= 0:
@@ -106,6 +108,9 @@ class Analyzer:
         n = self.g.load_bad_analyses(delAnaFiles)
         if verbose:
             print(n, 'bad analyses loaded.')
+        n = self.g.load_char_equiv(charEquivFiles)
+        if verbose:
+            print(n, 'character equivalence pairs loaded.')
         self.g.compile_all()
         if verbose:
             print('Paradigms and lexemes loaded and compiled in', time.time() - t1, 'seconds.')
