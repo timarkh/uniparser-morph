@@ -12,7 +12,7 @@ class SubLexeme:
     into one or several sublexemes.
     """
 
-    def __init__(self, numStem, stem, paradigm, gramm, gloss, lex,
+    def __init__(self, numStem, stem, paradigm, gramm, gloss, glossByLang, lex,
                  noIncorporation=False):
         self.numStem = numStem      # the number of the stem
         # (If several stems are equal, store them as one SubLexeme.
@@ -24,6 +24,10 @@ class SubLexeme:
         self.paradigm = paradigm
         self.gramm = gramm
         self.gloss = replace_morph_breaks(gloss)
+        self.glossByLang = {
+            lang: replace_morph_breaks(glossByLang[lang])
+            for lang in glossByLang
+        }
         self.lex = lex          # the Lexeme object this SubLexeme is a part of
         self.noIncorporation = noIncorporation
 
@@ -42,11 +46,13 @@ class SubLexeme:
             middleStem = middleStem[1:]
         if middleStem.endswith('.'):
             middleStem = middleStem[:-1]
-        wf, wfGlossed, gloss = join_stem_flex(middleStem,
-                                              self.gloss,
-                                              flexInTable.afx,
-                                              bStemStarted=True)
-        return wf, wfGlossed, gloss
+        wf, wfGlossed,\
+            gloss, glossByLang = join_stem_flex(middleStem,
+                                                self.gloss,
+                                                self.glossByLang,
+                                                flexInTable.afx,
+                                                bStemStarted=True)
+        return wf, wfGlossed, gloss, glossByLang
 
     def __repr__(self):
         res = '<SubLexeme>\n'
@@ -54,6 +60,8 @@ class SubLexeme:
         res += 'paradigm: ' + self.paradigm + '\n'
         res += 'gramm: ' + self.gramm + '\n'
         res += 'gloss: ' + self.gloss + '\n'
+        for lang in self.glossByLang:
+            res += 'gloss_' + lang + ': ' + self.glossByLang[lang] + '\n'
         res += '</SubLexeme>\n'
         return res
 
@@ -124,6 +132,7 @@ class Lexeme:
         self.gramm = ''
         self.grammIncorp = ''
         self.gloss = ''
+        self.glossByLang = {}
         self.glossIncorp = ''
         self.sublexStd = None   # Sublexeme object for the standardized stem, if any
         self.subLexemes = []
@@ -156,6 +165,8 @@ class Lexeme:
             try:
                 self.key2func[obj['name']](obj)
             except KeyError:
+                if obj['name'].startswith('gloss_'):
+                    self.add_gloss(obj, obj['name'][6:])
                 self.add_data(obj)
         self.check_gloss()
         self.generate_sublexemes()
@@ -256,7 +267,7 @@ class Lexeme:
                              ' in ' + self.lemma)
         self.grammIncorp = grammIncorp
 
-    def add_gloss(self, obj):
+    def add_gloss(self, obj, lang=''):
         gloss = obj['value']
         if type(gloss) != str or len(gloss) <= 0:
             self.raise_error('Wrong gloss in ' + self.lemma + ': ', gloss)
@@ -264,7 +275,10 @@ class Lexeme:
         if len(self.gloss) > 0:
             self.raise_error('Duplicate gloss: ' + gloss +
                              ' in ' + self.lemma)
-        self.gloss = gloss
+        if not lang:
+            self.gloss = gloss
+        else:
+            self.glossByLang[lang] = gloss
 
     def add_gloss_incorp(self, obj):
         glossIncorp = obj['value']
@@ -289,8 +303,11 @@ class Lexeme:
                 if len(defaultValue) > 0:
                     self.gloss = defaultValue[0]
                     break
-        if len(self.gloss) <= 0:
+        if not self.gloss:
             self.gloss = 'STEM'
+        for lang in self.glossByLang:
+            if not self.glossByLang[lang]:
+                self.glossByLang[lang] = self.gloss
 
     def add_paradigm(self, obj):
         paradigm = obj['value']
@@ -307,7 +324,7 @@ class Lexeme:
             if all(ex != ex2add for ex in self.exceptions[tagSet]):
                 self.exceptions[tagSet].append(ex2add)
         except KeyError:
-            self.exceptions[tagSet] = [ex2add]
+            self.exceptions[(t for t in sorted(tagSet))] = [ex2add]
 
     def add_data(self, obj):
         try:
@@ -325,6 +342,10 @@ class Lexeme:
         paradigms = [self.separate_parts(p) for p in self.paradigms]
         grams = self.separate_parts(self.gramm)
         glosses = self.separate_parts(self.gloss)
+        glossesByLang = {
+            lang: self.separate_parts(self.glossByLang[lang])
+            for lang in self.glossByLang
+        }
 
         # Add conversion links from the descriptions of the paradigms:
         for pGroup in paradigms:
@@ -346,6 +367,12 @@ class Lexeme:
             self.raise_error('Wrong number of glosses (' + self.gloss +
                              ') in ' + self.lemma)
             return
+        for lang in glossesByLang:
+            if len(glossesByLang[lang]) != len(glosses):
+                self.raise_error('Wrong number of glosses '
+                                 'in an alternative language (' + self.glossByLang[lang] +
+                                 ') in ' + self.lemma)
+                return
         for p in paradigms:
             if len(p) not in [1, len(stems)]:
                 self.raise_error('Wrong number of paradigms in ' +
@@ -359,8 +386,16 @@ class Lexeme:
                 curGloss = self.glossIncorp
             elif len(glosses) == 1:
                 curGloss = glosses[0][0]  # no variants for glosses
+                curGlossByLang = {
+                    lang: glossesByLang[lang][0][0]
+                    for lang in self.glossByLang
+                }
             elif len(glosses) > 1:
                 curGloss = glosses[-1][0]
+                curGlossByLang = {
+                    lang: glossesByLang[lang][-1][0]
+                    for lang in self.glossByLang
+                }
             if self.grammIncorp is not None:
                 curGramm = self.grammIncorp
             elif len(grams) == 1:
@@ -368,13 +403,23 @@ class Lexeme:
             elif len(grams) > 1:
                 curGramm = grams[-1][0]
             self.append_sublexeme(-1, self.stemIncorp, '',
-                                  curGramm, curGloss, False)
+                                  curGramm, curGloss, curGlossByLang,
+                                  False)
         for iStem in range(len(stems)):
             curGloss, curGramm = '', ''
+            curGlossByLang = {}
             if len(glosses) == 1:
                 curGloss = glosses[0][0]  # no variants for glosses
+                curGlossByLang = {
+                    lang: glossesByLang[lang][0][0]
+                    for lang in self.glossByLang
+                }
             elif len(glosses) > 1:
                 curGloss = glosses[iStem][0]
+                curGlossByLang = {
+                    lang: glossesByLang[lang][iStem][0]
+                    for lang in self.glossByLang
+                }
             if len(grams) == 1:
                 curGramm = grams[0][0]    # no variants for grams either
             elif len(grams) > 1:
@@ -388,17 +433,20 @@ class Lexeme:
             for curStem in stems[iStem]:
                 for curParadigm in curParadigms:
                     self.append_sublexeme(iStem, curStem, curParadigm,
-                                          curGramm, curGloss, noIncorporation)
+                                          curGramm, curGloss, curGlossByLang,
+                                          noIncorporation)
 
-    def append_sublexeme(self, iStem, curStem, curParadigm, curGramm, curGloss, noIncorporation):
+    def append_sublexeme(self, iStem, curStem, curParadigm, curGramm,
+                         curGloss, curGlossByLang, noIncorporation):
         for sl in self.subLexemes:
             if (sl.stem == curStem and sl.paradigm == curParadigm
                     and sl.gramm == curGramm and sl.gloss == curGloss
+                    and sl.glossByLang == curGlossByLang
                     and sl.noIncorporation == noIncorporation):
                 sl.numStem.add(iStem)
                 return
         self.subLexemes.append(SubLexeme(iStem, curStem, curParadigm,
-                                         curGramm, curGloss, self,
+                                         curGramm, curGloss, curGlossByLang, self,
                                          noIncorporation=noIncorporation))
 
     @staticmethod
@@ -423,7 +471,7 @@ class Lexeme:
         Generate a sublexeme object for the standardized stem, if any.
         """
         if len(self.stemStd) > 0:
-            self.sublexStd = SubLexeme(0, self.stemStd, '', '', '', self)
+            self.sublexStd = SubLexeme(0, self.stemStd, '', '', '', {}, self)
         else:
             self.sublexStd = None
 

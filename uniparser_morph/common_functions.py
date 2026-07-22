@@ -99,16 +99,30 @@ rxCleanLDoubleEq = re.compile('([>~=])=+')
 rxCleanR = re.compile('-+([<~=]|$)')
 
 
-def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
+def join_stem_flex(stem, stemGloss, stemGlossByLang, flex, bStemStarted=False):
     """
     Join a stem and an inflexion.
     """
+    if stemGlossByLang is None:
+        stemGlossByLang = {}
     wfGlossed = ''
     gloss = ''
+    glossByLang = {
+        lang: '' for lang in stemGlossByLang
+    }
     wf = ''
     pfxPart = ''
+    pfxPartByLang = {
+        lang: '' for lang in stemGlossByLang
+    }
     ifxs = ''
+    ifxsByLang = {
+        lang: '' for lang in stemGlossByLang
+    }
     mainPart = ''
+    mainPartByLang = {
+        lang: '' for lang in stemGlossByLang
+    }
     curStemParts = rxStemParts.findall(stem)
     curFlexParts = flex.flexParts[0]
     stemSpecs = ''.join(['.' + fp.gloss for fp in curFlexParts
@@ -144,6 +158,8 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
             wfGlossed += replace_morph_breaks(curPart)
             if glossType in [GLOSS_STEM, GLOSS_STEM_FORCED]:
                 mainPart += stemGloss + stemSpecs
+                for lang in stemGlossByLang:
+                    mainPartByLang[lang] += stemGlossByLang[lang] + stemSpecs
         elif iSide == 1:
             wf += curPart.flex.replace('0', '')
             curFlex = curPart.flex
@@ -152,16 +168,40 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
             if curPart.glossType == GLOSS_AFX:
                 if bStemStarted:
                     mainPart += curPart.sepL + curPart.gloss + curPart.sepR
+                    for lang in stemGlossByLang:
+                        if lang in curPart.glossByLang:
+                            curPartGloss = curPart.glossByLang[lang]
+                        else:
+                            curPartGloss = curPart.gloss
+                        mainPartByLang[lang] += curPart.sepL + curPartGloss + curPart.sepR
                 else:
                     pfxPart += curPart.sepL + curPart.gloss + curPart.sepR
+                    for lang in stemGlossByLang:
+                        if lang in curPart.glossByLang:
+                            curPartGloss = curPart.glossByLang[lang]
+                        else:
+                            curPartGloss = curPart.gloss
+                        pfxPartByLang[lang] += curPart.sepL + curPartGloss + curPart.sepR
                 wfGlossed += curPart.sepL + curFlex + curPart.sepR
             elif curPart.glossType == GLOSS_IFX:
                 ifxs += '<' + curPart.gloss + '>'
+                for lang in stemGlossByLang:
+                    if lang in curPart.glossByLang:
+                        curPartGloss = curPart.glossByLang[lang]
+                    else:
+                        curPartGloss = curPart.gloss
+                    ifxsByLang[lang] += '<' + curPartGloss + '>'
                 wfGlossed += '<' + curFlex + '>'
             elif curPart.glossType == GLOSS_REDUPL_R:
                 # if bStemStarted:
                 bStemStarted = True
                 mainPart += '-' + curPart.gloss + '~'
+                for lang in stemGlossByLang:
+                    if lang in curPart.glossByLang:
+                        curPartGloss = curPart.glossByLang[lang]
+                    else:
+                        curPartGloss = curPart.gloss
+                    mainPartByLang[lang] += '-' + curPartGloss + '~'
                 # else:
                 #     pfxPart += '-' + curPart.gloss + '~'
                 wfGlossed += '-' + curPart.flex + '~'
@@ -169,6 +209,12 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
                 # if bStemStarted:
                 bStemStarted = True
                 mainPart += '~' + curPart.gloss + '-'
+                for lang in stemGlossByLang:
+                    if lang in curPart.glossByLang:
+                        curPartGloss = curPart.glossByLang[lang]
+                    else:
+                        curPartGloss = curPart.gloss
+                    mainPartByLang[lang] += '~' + curPartGloss + '-'
                 # else:
                 #     pfxPart += '~' + curPart.gloss + '-'
                 wfGlossed += '~' + curPart.flex + '-'
@@ -179,18 +225,26 @@ def join_stem_flex(stem, stemGloss, flex, bStemStarted=False):
                 bStemStarted = True
                 wfGlossed += curPart.flex
                 mainPart += stemGloss + stemSpecs
+                for lang in stemGlossByLang:
+                    mainPartByLang[lang] += stemGlossByLang[lang] + stemSpecs
             elif curPart.glossType == GLOSS_EMPTY:
                 bStemStarted = True
                 wfGlossed += curPart.flex
         pos[iSide] += 1
         gloss = pfxPart + ifxs + mainPart
+        for lang in stemGlossByLang:
+            glossByLang[lang] = pfxPartByLang[lang] + ifxsByLang[lang] + mainPartByLang[lang]
     try:
         gloss = rxCleanL.sub('\\1', gloss).strip('-~=')
         gloss = rxCleanLDoubleEq.sub('\\1', gloss).strip('-~=')
         gloss = rxCleanR.sub('\\1', gloss).strip('-~=')
+        for lang in stemGlossByLang:
+            glossByLang[lang] = rxCleanL.sub('\\1', glossByLang[lang]).strip('-~=')
+            glossByLang[lang] = rxCleanLDoubleEq.sub('\\1', glossByLang[lang]).strip('-~=')
+            glossByLang[lang] = rxCleanR.sub('\\1', glossByLang[lang]).strip('-~=')
         wfGlossed = rxCleanL.sub('\\1', wfGlossed).strip('-~=')
         wfGlossed = rxCleanLDoubleEq.sub('\\1', wfGlossed).strip('-~=')
         wfGlossed = rxCleanR.sub('\\1', wfGlossed).strip('-~=')
     except:
         pass
-    return wf, wfGlossed, gloss
+    return wf, wfGlossed, gloss, glossByLang

@@ -25,6 +25,8 @@ class Wordform:
         self.wfGlossed = ''
         self.wfGlossedStd = ''
         self.gloss = ''
+        self.glossByLang = {}   # language code -> gloss in this language
+                                # (for dictionaries with glosses in multiple languages)
         self.lemma = ''
         self.gramm = ''
         self.stem = ''
@@ -63,7 +65,7 @@ class Wordform:
             if self.lemma == "":
                 self.lemma = lex.lemma
             elif lex.lemma != "":
-                self.lemma += "+"+lex.lemma
+                self.lemma += "+" + lex.lemma
             return
         unifiedLC = copy.deepcopy(flex.lemmaChangers[0])
         for i in range(1, len(flex.lemmaChangers)):
@@ -110,7 +112,7 @@ class Wordform:
     def add_other_data(self, lex, flex):
         if flex.otherData is not None:
             for k, v in flex.otherData:
-                if k not in Wordform.printableOtherFields or len(v) <= 0:
+                if k not in Wordform.printableOtherFields or not v:
                     continue
                 bFound = False
                 for i in range(len(self.otherData)):
@@ -163,7 +165,8 @@ class Wordform:
             for tag in gramm.split(','):
                 m = self.rxLexTagOtherField.search(tag)
                 if m is not None:
-                    if m.group(1) not in ('wf', 'lemma', 'gramm', 'stem', 'gloss', 'parts', 'wfGlossed'):
+                    if (m.group(1) not in ('wf', 'lemma', 'gramm', 'stem', 'gloss', 'parts', 'wfGlossed')
+                            and not m.group(1).startswith('gloss_')):
                         lex2add.otherData.append((m.group(1), m.group(2)))
                 else:
                     if len(lex2add.gramm) > 0:
@@ -179,9 +182,11 @@ class Wordform:
         subLexStem = sublex.stemParts
         if flex.startWithSelf and not subLexStem.startswith('.'):
             subLexStem = '.' + subLexStem
-        self.wf, self.wfGlossed, self.gloss = join_stem_flex(subLexStem,
-                                                             sublex.gloss,
-                                                             flex)
+        self.wf, self.wfGlossed,\
+            self.gloss, self.glossByLang = join_stem_flex(subLexStem,
+                                                          sublex.gloss,
+                                                          sublex.glossByLang,
+                                                          flex)
         if flex.flexStdObj is not None or sublex.lex.sublexStd is not None:
             if sublex.lex.sublexStd is not None:
                 subLexStemStd = sublex.lex.sublexStd.stemParts
@@ -193,9 +198,11 @@ class Wordform:
                 flexStd = flex.flexStdObj
             else:
                 flexStd = flex
-            wfStd, self.wfGlossedStd, glossStd = join_stem_flex(subLexStemStd,
-                                                                sublex.gloss,
-                                                                flexStd)
+            wfStd, self.wfGlossedStd,\
+                glossStd, glossByLangStd = join_stem_flex(subLexStemStd,
+                                                          sublex.gloss,
+                                                          sublex.glossByLang,
+                                                          flexStd)
 
     def append_subword_data(self):
         """
@@ -253,6 +260,9 @@ class Wordform:
             if len(wfGlossedStd) > 2:
                 r += ' parts_std=' + wfGlossedStd
             r += ' gloss=' + gloss
+            for lang in self.glossByLang:
+                glossLang = xml.sax.saxutils.quoteattr(self.glossByLang[lang].strip())
+                r += ' gloss_' + lang + '=' + glossLang
 
         for field, value in otherData:
             if field in Wordform.printableOtherFields:
@@ -306,6 +316,8 @@ class Wordform:
             r['gloss'] = self.gloss
             if len(self.wfGlossedStd) > 0:
                 r['wfGlossedStd'] = self.wfGlossedStd
+            for lang in self.glossByLang:
+                r['gloss_' + lang] = self.glossByLang[lang]
         for field, value in otherData:
             if field in Wordform.printableOtherFields:
                 r[field] = value

@@ -57,9 +57,12 @@ class ParadigmLink:
 
 
 class InflexionPart:
-    def __init__(self, flex, gloss, glossType, sepL='-', sepR='-'):
+    def __init__(self, flex, gloss, glossByLang, glossType, sepL='-', sepR='-'):
         self.flex = flex
         self.gloss = gloss
+        self.glossByLang = glossByLang
+        if self.glossByLang is None:
+            self.glossByLang = {}
         self.glossType = glossType
         # L/R separators (- for affixes, = for clitics described as affixes)
         self.sepL = sepL
@@ -87,6 +90,7 @@ class Inflexion:
         self.passStemNum = True     # True iff stemNum must coincide with stemNumOut at any time
         self.gramm = ''         # grammatical tags separated by commas
         self.gloss = ''
+        self.glossByLang = {}
         self.position = POS_UNSPECIFIED
         self.reduplications = {}    # number -> Reduplication object
         self.regexTests = []
@@ -123,6 +127,8 @@ class Inflexion:
             except KeyError:
                 if obj['name'].startswith('regex-'):
                     self.add_regex_test(obj)
+                elif obj['name'].startswith('gloss_'):
+                    self.add_gloss(obj, obj['name'][6:])
                 else:
                     self.add_data(obj)
         self.generate_parts()
@@ -170,7 +176,7 @@ class Inflexion:
                              ' in ' + self.flex)
         self.gramm = gramm
 
-    def add_gloss(self, obj):
+    def add_gloss(self, obj, lang=''):
         gloss = obj['value']
         if type(gloss) != str or len(gloss) <= 0:
             self.raise_error('Wrong gloss in ' + self.flex + ': ', gloss)
@@ -178,7 +184,10 @@ class Inflexion:
         if len(self.gloss) > 0:
             self.raise_error('Duplicate gloss: ' + gloss +
                              ' in ' + self.flex)
-        self.gloss = gloss.replace('|', '¦')
+        if not lang:
+            self.gloss = gloss.replace('|', '¦')
+        else:
+            self.glossByLang[lang] = gloss.replace('|', '¦')
 
     def add_position(self, obj):
         v = obj['value']
@@ -264,8 +273,13 @@ class Inflexion:
         flexParts = self.rxFlexSplitter.findall(flex)
         if len(self.gloss) <= 0:
             glossParts = [''] * len(flexParts)
+            glossPartsByLang = {}
         else:
             glossParts = self.gloss.split('¦')
+            glossPartsByLang = {
+                lang: self.glossByLang[lang].split('¦')
+                for lang in self.glossByLang
+            }
         iGlossPart = 0
         iRedupl = 0
         bStemStarted = False
@@ -302,12 +316,36 @@ class Inflexion:
                 elif glossParts[iGlossPart].endswith('~'):
                     glossType = GLOSS_REDUPL_R
                     # glossParts[iGlossPart] = glossParts[iGlossPart][:-1]
+
+                # No the same things, but for glosses in alternative languages
+                for lang in glossPartsByLang:
+                    glossPartsLang = glossPartsByLang[lang]
+                    if iGlossPart >= len(glossPartsLang):
+                        self.raise_error('No correspondence between the inflexion ' +
+                                         '(' + self.flex + ') and the glosses ' +
+                                         '(' + self.gloss + ') ')
+                        return
+                    # It is assumed that the special characters in the alternative
+                    # glosses are the same, so we don't check them anymore
             
             # 2. Look at the inflexion.
+            try:
+                curGlossPartByLang = {
+                    lang: glossPartsByLang[lang][iGlossPart]
+                    for lang in glossPartsByLang
+                }
+                curGlossPartByLangClean = {
+                    lang: self.rxCleanGloss.sub('', glossPartsByLang[lang][iGlossPart])
+                    for lang in glossPartsByLang
+                }
+            except:
+                curGlossPartByLang = {}
+                curGlossPartByLangClean = {}
             if len(flexPart) == 0:
-                self.flexParts[0].append(InflexionPart('', '', GLOSS_EMPTY))
+                self.flexParts[0].append(InflexionPart('', '', {}, GLOSS_EMPTY))
             elif flexPart == '0':
                 self.flexParts[0].append(InflexionPart('', glossParts[iGlossPart],
+                                                       curGlossPartByLang,
                                                        glossType))
                 iGlossPart += 1
             elif flexPart.startswith('[~') and flexPart.endswith(']'):
@@ -336,7 +374,9 @@ class Inflexion:
                 bStemStarted = True
                 bStemForcedRepeat = True
                 self.flexParts[0].append(InflexionPart(flexPart,
-                                                       glossParts[iGlossPart], glossType))
+                                                       glossParts[iGlossPart],
+                                                       curGlossPartByLang,
+                                                       glossType))
                 iGlossPart += 1
             elif flexPart == '.' or flexPart == '[.]':
                 glossType = GLOSS_STEM
@@ -346,7 +386,7 @@ class Inflexion:
                     glossType = GLOSS_EMPTY
                 bStemStarted = True
                 bStemForcedRepeat = False
-                self.flexParts[0].append(InflexionPart(flexPart, '.', glossType))
+                self.flexParts[0].append(InflexionPart(flexPart, '.', {}, glossType))
             elif flexPart.startswith('[') and flexPart.endswith(']'):
                 glossType = GLOSS_STEM
                 if bStemForcedRepeat:
@@ -356,13 +396,14 @@ class Inflexion:
                 bStemStarted = True
                 bStemForcedRepeat = False
                 self.flexParts[0].append(InflexionPart(flexPart[1:len(flexPart)-1],
-                                                    '', glossType))
+                                                    '', {}, glossType))
             elif flexPart == '<.>':
-                self.flexParts[0].append(InflexionPart('<.>', '<.>', GLOSS_NEXT_FLEX))
+                self.flexParts[0].append(InflexionPart('<.>', '<.>', {}, GLOSS_NEXT_FLEX))
             else:
                 self.flexParts[0].append(InflexionPart(flexPart,
                     self.rxCleanGloss.sub('', glossParts[iGlossPart]),
-                                                       glossType))
+                    curGlossPartByLangClean,
+                    glossType))
                 iGlossPart += 1
         # If there was a custom separator, put it to the left of the leftmost
         # affix-like part and to the right of the rightmost affix-like part
@@ -580,9 +621,11 @@ class Inflexion:
             fpTmp = copy.deepcopy(fpRedupl)
             if reduplFragmentParts[iReduplFragmentPart] == '<.>':
                 fpTmp.gloss = '<.>'
+                fpTmp.glossByLang = {}
                 fpTmp.glossType = GLOSS_NEXT_FLEX
             elif iReduplFragmentPart > 1:
                 fpTmp.gloss = ''
+                fpTmp.glossByLang = {}
             fpTmp.flex = reduplFragmentParts[iReduplFragmentPart]
             self.flexParts[flexPartNum].insert(iFp + iReduplFragmentPart, fpTmp)
         # if len(reduplFragmentParts) > 1:
@@ -802,7 +845,7 @@ class Paradigm:
                         flex.otherDataBracketR = ')'
                 flex.startWithSelf = True
                 if len(flex.flexParts[0]) > 0:
-                    flex.flexParts[0].insert(0, InflexionPart('', '',
+                    flex.flexParts[0].insert(0, InflexionPart('', '', {},
                                                               GLOSS_STARTWITHSELF))
                 self.flex.append(flex)
             iStem += 1
@@ -1216,7 +1259,7 @@ class Paradigm:
             # TODO: Deal with GLOSS_STARTWITHSELF in a definitive way.
             # TODO: Probably abandon it in favor of uniform handling of stems
             # TODO: in prardigms and derivations.
-            fpNew = [InflexionPart('', '', GLOSS_STARTWITHSELF)]
+            fpNew = [InflexionPart('', '', {}, GLOSS_STARTWITHSELF)]
         else:
             fpOldR = flexPartsR[0]
             if flexPartsL[-1][0].glossType == GLOSS_STARTWITHSELF:
@@ -1255,6 +1298,7 @@ class Paradigm:
                 continue
             fp = InflexionPart(fpOld[iSide][pos[iSide]].flex,
                                fpOld[iSide][pos[iSide]].gloss,
+                               fpOld[iSide][pos[iSide]].glossByLang,
                                fpOld[iSide][pos[iSide]].glossType,
                                fpOld[iSide][pos[iSide]].sepL,
                                fpOld[iSide][pos[iSide]].sepR)

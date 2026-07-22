@@ -5090,6 +5090,7 @@
  -flex: <0>.ськ<.>//<0>.ск<.>//<0>.ӥськ<.>//<0>.ыськ<.>
   gramm: pass
   gloss: PASS
+  gloss_ru: ПАСС
  -flex: <0>.иськ<.>
   gramm: pass
   gloss: PASS

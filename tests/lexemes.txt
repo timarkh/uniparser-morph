@@ -91089,6 +91089,8 @@
  lex: данъяны
  stem: данъя.
  gramm: V,II,tr
+ gloss: glorify
+ gloss_ru: чествовать
  paradigm: connect_verbs-II
  trans_ru: чествовать, прославлять, восхвалять
 
