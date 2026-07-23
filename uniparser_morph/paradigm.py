@@ -178,15 +178,18 @@ class Inflexion:
 
     def add_gloss(self, obj, lang=''):
         gloss = obj['value']
-        if type(gloss) != str or len(gloss) <= 0:
+        if not gloss:
             self.raise_error('Wrong gloss in ' + self.flex + ': ', gloss)
             return
-        if len(self.gloss) > 0:
-            self.raise_error('Duplicate gloss: ' + gloss +
-                             ' in ' + self.flex)
         if not lang:
+            if self.gloss:
+                self.raise_error('Duplicate gloss: ' + gloss +
+                                 ' in ' + self.flex)
             self.gloss = gloss.replace('|', '¦')
         else:
+            if lang in self.glossByLang and self.glossByLang[lang]:
+                self.raise_error('Duplicate gloss (' + lang + '): ' + gloss +
+                                 ' in ' + self.flex)
             self.glossByLang[lang] = gloss.replace('|', '¦')
 
     def add_position(self, obj):

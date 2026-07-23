@@ -27,6 +27,7 @@ Pre-defined fields that have to be present in each lexeme are the following:
 The rest is optional.
 
 * ``gloss`` (absent here) can contain the gloss for the stem, in case you switch on glossing. All stems without this field present will be glossed as ``STEM``.
+* ``gloss_LANG`` fields, where ``LANG`` is any alphanumeric string, can additionally contain the gloss in other languages (e.g., ``gloss_de`` for a German gloss). If a stem or one of the inflexions in an analyzed word form contains ``gloss_LANG`` but others do not, the default ``gloss`` values are used in its place to generate the ``gloss_LANG`` field for the word form.
 * Any other field with a string value can be added. In the example above, the lexeme contains an English translation in the ``trans_en`` field. (A translation into a metalanguage may coincide with the gloss, but generally it needs not be that concise.)
 
 Multiple stems

@@ -167,7 +167,8 @@ class Lexeme:
             except KeyError:
                 if obj['name'].startswith('gloss_'):
                     self.add_gloss(obj, obj['name'][6:])
-                self.add_data(obj)
+                else:
+                    self.add_data(obj)
         self.check_gloss()
         self.generate_sublexemes()
         self.generate_sublexeme_std()
@@ -269,15 +270,18 @@ class Lexeme:
 
     def add_gloss(self, obj, lang=''):
         gloss = obj['value']
-        if type(gloss) != str or len(gloss) <= 0:
+        if not gloss:
             self.raise_error('Wrong gloss in ' + self.lemma + ': ', gloss)
             return
-        if len(self.gloss) > 0:
-            self.raise_error('Duplicate gloss: ' + gloss +
-                             ' in ' + self.lemma)
         if not lang:
+            if self.gloss:
+                self.raise_error('Duplicate gloss: ' + gloss +
+                                 ' in ' + self.lemma)
             self.gloss = gloss
         else:
+            if lang in self.glossByLang and self.glossByLang[lang]:
+                self.raise_error('Duplicate gloss (' + lang + '): ' + gloss +
+                                 ' in ' + self.lemma)
             self.glossByLang[lang] = gloss
 
     def add_gloss_incorp(self, obj):

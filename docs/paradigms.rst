@@ -35,6 +35,9 @@ If you want one morpheme to be split into several affixes, each with a separate 
   gramm: ...
   gloss: GLOSS1|GLOSS2|GLOSS3
 
+
+A morpheme can also contain ``gloss_LANG`` fields, where ``LANG`` is any alphanumeric string. These are glosses in other languages (e.g., ``gloss_de`` for a German gloss). If a stem or one of the inflexions in an analyzed word form contains ``gloss_LANG`` but others do not, the default ``gloss`` values are used in its place to generate the ``gloss_LANG`` field for the word form.
+
 Paradigms
 ---------
 

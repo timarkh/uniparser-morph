@@ -347,11 +347,15 @@ class Wordform:
                 r += ','.join(tag for tag in sorted(gr.split(','))
                               if len(tag) > 0)
             r += "']\n"
+
+        # Gloss
         wfGlossedStd = ''
         if len(self.wfGlossedStd) > 0:
             wfGlossedStd = ' [' + self.wfGlossedStd + ']'
         r += self.wfGlossed + wfGlossedStd + '\n'
         r += self.gloss + '\n'
+        for lang in self.glossByLang:
+            r += 'gloss_' + lang + '\t' + self.glossByLang[lang] + '\n'
         for field, value in self.otherData:
             r += field + '\t' + str(value) + '\n'
         if len(self.subwords) > 0:

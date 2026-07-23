@@ -5241,6 +5241,7 @@
  -flex: .[ь]ськ<.>//.[ь]ск<.>//.иськ<.>
   gramm: pass
   gloss: PASS
+  gloss_ru: ПАСС
  -flex: .[ь]ыл<.>//.[ь]ылл<.>
   gramm: iter
   gloss: ITER
@@ -5329,6 +5330,7 @@
  -flex: .ськ<.>//.ск<.>
   gramm: pass
   gloss: PASS
+  gloss_ru: ПАСС
   paradigm: Infinitive-I
   paradigm: Infinitive-I-dial-short
   paradigm: Verb-pres-I-positive
